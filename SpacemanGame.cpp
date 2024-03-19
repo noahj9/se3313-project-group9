@@ -14,6 +14,10 @@
 std::atomic<bool> stopRequested(false);
 std::mutex userStopMutex;
 
+double roundDown(double value) {
+    return std::floor(value * 100.0) / 100.0;
+}
+
 // Class to manage user details and actions within the game
 class User {
 public:
@@ -43,13 +47,13 @@ public:
 
     void deposit(double amount) {
         if (amount > 0) {
-            balance += amount;
+            balance = roundDown(balance + amount);
         }
     }
 
     bool withdraw(double amount) {
         if (amount <= balance && amount > 0) {
-            balance -= amount;
+            balance = roundDown(balance - amount);
             return true;
         }
         return false;
@@ -91,6 +95,8 @@ public:
             std::cout << "Cannot add user " << userId << " with a negative balance of $" << initialBalance << "." << std::endl;
             return; // Exit the function if the balance is negative
         }
+
+        initialBalance = roundDown(initialBalance);
 
         // Attempt to insert the new user into the map
         auto result = users.emplace(userId, User(userId, initialBalance));
@@ -171,7 +177,7 @@ public:
             std::future<void> userInputHandler = std::async(std::launch::async, handleUserInput, std::ref(stopRequested), [this](std::string userId){ this->userStops(userId); });
 
             // Game loop starts here
-            while (gameInProgress && anyUserInGame()) {
+            while (gameInProgress) {
                 std::this_thread::sleep_for(std::chrono::seconds(1)); // Simulate time passing
                 multiplier += 0.1; // Increment the multiplier over time
                 std::cout << "Current multiplier: " << multiplier << std::endl; // Display the current multiplier
@@ -188,11 +194,6 @@ public:
             stopRequested = true; // Signal the user input thread to stop
             userInputHandler.get(); // Wait for the user input handling thread to finish
 
-            if (!anyUserInGame()) {
-                std::cout << "All users have stopped. Ending the game." << std::endl;
-                endGame(); // End the game if all users have stopped their bets
-            }
-
             gameInProgress = false; // Mark the game as no longer in progress
         } else {
             if (gameInProgress) {
@@ -207,8 +208,8 @@ public:
         auto it = users.find(userId);
         if (it != users.end() && it->second.inGame) {
             // User decides to stop, calculate their earnings based on the current multiplier
-            double earnings = it->second.betAmount * multiplier;
-            it->second.balance += earnings; // Update user's balance
+            double earnings = roundDown(it->second.betAmount * multiplier);
+            it->second.balance = roundDown(it->second.balance + earnings);
             it->second.reset(); // Reset user's game state
             std::cout << "User " << userId << " stopped and secured " << earnings << std::endl;
         } else if (it == users.end()) {
