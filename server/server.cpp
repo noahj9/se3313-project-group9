@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 constexpr int PORT = 8080;
-
 struct GameRoom
 {
     int name;
@@ -21,8 +20,7 @@ std::string getActiveRooms()
     std::string roomList;
     for (const auto &room : activeGameRooms)
     {
-        roomList += "Room ID: " + std::to_string(room.id) + ", Players: " + std::to_string(room.numPlayers) +
-                    "/" + std::to_string(room.maxCapacity) + "\n";
+        roomList += "Room Name: " + std::to_string(room.name) + ", Players: " + std::to_string(room.numPlayers) + "\n";
     }
     return roomList;
 }
@@ -42,9 +40,41 @@ void handleClient(int clientSocket)
             std::string roomList = getActiveRooms();
             write(clientSocket, roomList.c_str(), roomList.size());
         }
-        else if
+        else if (request.find("CREATE_ROOM") == 0) // create a new game room
         {
-            // logic for other requests
+            // parse the room name from the request
+            size_t pos = request.find(" "); // find first space
+            if (pos != std::string::npos)
+            {
+                std::string roomName = request.substr(pos + 1); // find room name after space
+
+                // add new room to the list of active game rooms
+                GameRoom newRoom;
+                newRoom.name = std::stoi(roomName);
+                // call function to make player join the new game room
+                newRoom.numPlayers = 1;
+                activeGameRooms.push_back(newRoom);
+            }
+        }
+        else if (request.find("JOIN_ROOM") == 0)
+        {
+            // parse the room name from the request
+            size_t pos = request.find(" "); // find first space
+            if (pos != std::string::npos)
+            {
+                std::string roomName = request.substr(pos + 1); // find room name after space
+
+                // call function to handle join room request
+                // joinRoom(roomName, clientSocket);
+            }
+        }
+        else if (request == "LEAVE_ROOM")
+        {
+            // needs to know which room the client wants to leave
+        }
+        else
+        {
+            std::cerr << "Invalid request from client.\n";
         }
     }
 

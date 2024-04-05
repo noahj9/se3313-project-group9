@@ -25,6 +25,13 @@ void handleServerResponse(int clientSocket)
     }
 }
 
+void joinRoom(int clientSocket, const std::string &roomName) // join room function
+{
+    // send JOIN_ROOM request to server
+    std::string request = "JOIN_ROOM " + roomName;
+    write(clientSocket, request.c_str(), request.size());
+}
+
 int main()
 {
     // new socket to connect to server
@@ -54,6 +61,11 @@ int main()
 
     // handle response in separate thread
     std::thread responseThread(handleServerResponse, clientSocket);
+
+    // joining a room handler
+    std::string roomNameToJoin = "Room1";   // this should bet set by GUI selection
+    joinRoom(clientSocket, roomNameToJoin); // this should be called on button press "Join A Room"
+
     responseThread.join(); // join back the thread when it finishes executing
 
     // close the socket connection
