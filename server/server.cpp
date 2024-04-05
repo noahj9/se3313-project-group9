@@ -25,6 +25,15 @@ std::string getActiveRooms()
     return roomList;
 }
 
+GameRoom createGameRoom(std::string roomName) // this needs to create a new thread, send the client to it, and new instance of spaceman game
+{
+    GameRoom newRoom;
+    newRoom.name = roomName;
+    newRoom.numPlayers = 1;
+    activeGameRooms.push_back(newRoom);
+    return newRoom;
+}
+
 // handle incoming client connections
 void handleClient(int clientSocket)
 {
@@ -49,9 +58,9 @@ void handleClient(int clientSocket)
                 std::string roomName = request.substr(pos + 1); // find room name after space
 
                 // add new room to the list of active game rooms
-                GameRoom newRoom;
-                newRoom.name = std::stoi(roomName);
+                GameRoom newRoom = createGameRoom(roomName);
                 // call function to make player join the new game room
+                // joinRoom(roomName, clientSocket); //joing the player into the newwly created room
                 newRoom.numPlayers = 1;
                 activeGameRooms.push_back(newRoom);
             }
