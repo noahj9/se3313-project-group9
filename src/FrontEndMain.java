@@ -11,7 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-
+import components.*;
 //import statements
 
 public class FrontEndMain extends JFrame {
@@ -160,6 +160,38 @@ public class FrontEndMain extends JFrame {
 			System.out.println("disconnect");
 		}
 	}
+	public class JoinRound implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			try
+			{
+				theSocket.close();
+				theField.setDisconnect();
+			}
+			catch(Exception ex)
+			{
+				System.out.println(ex.toString());
+			}
+			System.out.println("Join Round");
+		}
+	}
+	public class CashOut implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			try
+			{
+				theSocket.close();
+				theField.setDisconnect();
+			}
+			catch(Exception ex)
+			{
+				System.out.println(ex.toString());
+			}
+			System.out.println("CashOut");
+		}
+	}
 	public static int DISCONNECT = 0;
 	public static int WAIT = 1;
 	public static int PLAYING = 2;
@@ -265,48 +297,57 @@ public class FrontEndMain extends JFrame {
 	PlayingField theField;
 	FrontEndMain()
 	{
-        jlbHelloWorld = new JLabel("Hello World");
-        JButton upButton = new JButton("^");
-        upButton.addActionListener(new UpButtonListener());
-        upButton.setSize(100,20);
-        JButton rightButton = new JButton(">");
-        rightButton.addActionListener(new RightButtonListener());
-        rightButton.setSize(100,20);
-        JButton downButton = new JButton("v");
-        downButton.addActionListener(new DownButtonListener());
-        downButton.setSize(100,20);
-        JButton leftButton = new JButton("<");
-        leftButton.addActionListener(new LeftButtonListener());
-        leftButton.setSize(100,20);
-        JButton fireButton = new JButton("O");
-        fireButton.addActionListener(new FireButtonListener());
-        fireButton.setSize(100,20);
+        // jlbHelloWorld = new JLabel("Hello World");
+        // JButton upButton = new JButton("^");
+        // upButton.addActionListener(new UpButtonListener());
+        // upButton.setSize(100,20);
+        // // JButton rightButton = new JButton(">");
+        // // rightButton.addActionListener(new RightButtonListener());
+        // // rightButton.setSize(100,20);
+        // JButton downButton = new JButton("v");
+        // downButton.addActionListener(new DownButtonListener());
+        // downButton.setSize(100,20);
+        // // JButton leftButton = new JButton("<");
+        // // leftButton.addActionListener(new LeftButtonListener());
+        // // leftButton.setSize(100,20);
+        // JButton fireButton = new JButton("Select Room");
+        // fireButton.addActionListener(new FireButtonListener());
+        // fireButton.setSize(100,20);
         
-        JPanel directionPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 1; c.gridy = 0;        
-        directionPanel.add(upButton,c);
-        c.gridx = 0; c.gridy = 1;
-        directionPanel.add(leftButton,c);
-        c.gridx = 1; c.gridy = 2;
-        directionPanel.add(downButton,c);
-        c.gridx = 2; c.gridy = 1;        
-        directionPanel.add(rightButton,c);
-        c.gridx = 1; c.gridy = 1;
-        directionPanel.add(fireButton,c);
+        // JPanel directionPanel = new JPanel(new GridBagLayout());
+        // GridBagConstraints c = new GridBagConstraints();
+        // c.fill = GridBagConstraints.HORIZONTAL;
+        // c.gridx = 1; c.gridy = 0;        
+        // directionPanel.add(upButton,c);
+        // // c.gridx = 0; c.gridy = 1;
+        // // directionPanel.add(leftButton,c);
+        // c.gridx = 1; c.gridy = 2;
+        // directionPanel.add(downButton,c);
+        // // c.gridx = 2; c.gridy = 1;        
+        // // directionPanel.add(rightButton,c);
+        // c.gridx = 1; c.gridy = 1;
+        // directionPanel.add(fireButton,c);
 
-        JPanel connectionPanel = new JPanel(new GridBagLayout());
-        JButton connectButton = new JButton("Connect");
-        connectButton.addActionListener(new ConnectButtonListener());
-        c.gridx = 0; c.gridy = 0;
-        connectionPanel.add(connectButton,c);
-        JButton disconnectButton = new JButton("Disconnect");
-        disconnectButton.addActionListener(new DisconnectButtonListener());
-        c.gridx = 1; c.gridy = 0;
-        connectionPanel.add(disconnectButton,c);
+        // JPanel connectionPanel = new JPanel(new GridBagLayout());
+        // JButton connectButton = new JButton("Create New Game");
+        // // connectButton.addActionListener(new ConnectButtonListener());
+        // c.gridx = 0; c.gridy = 0;
+        // connectionPanel.add(connectButton,c);
+        // JButton disconnectButton = new JButton("Refresh List");
+        // // disconnectButton.addActionListener(new DisconnectButtonListener());
+        // c.gridx = 1; c.gridy = 0;
+        // connectionPanel.add(disconnectButton,c);
+
+		// JButton room = new JButton("Join Round");
+        // room.addActionListener(new JoinRound());
+        // c.gridx = 0; c.gridy = 1;
+        // connectionPanel.add(room,c);
+		
+		// JButton cashOut = new JButton("Cash Out");
+        // cashOut.addActionListener(new CashOut());
+        // c.gridx = 1; c.gridy = 1;
+        // connectionPanel.add(cashOut,c);
         
-        Rectangle theBounds = getBounds();
         Dimension d = new Dimension();
         d.width = 500;
         d.height = 450;
@@ -323,16 +364,17 @@ public class FrontEndMain extends JFrame {
         c.weightx = 1.0;c.weighty=1.0;
         c.fill = GridBagConstraints.BOTH;
         add(theField,c);
-        c.gridx = 0; c.gridy = 9;
-        c.gridheight = 1;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.NONE;
-        add(connectionPanel,c);
+        // c.gridx = 0; c.gridy = 9;
+        // c.gridheight = 1;
+        // c.gridwidth = 2;
+        // c.fill = GridBagConstraints.NONE;
+        // add(connectionPanel,c);
+		ControllerGame game = new ControllerGame();
         c.gridx = 7;c.gridy = 9;
         c.gridheight = 1;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.NONE;
-        add(directionPanel,c);
+        add(game,c);
         this.setSize(500,500);
         this.setTitle("Network Game Console");
 
