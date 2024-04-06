@@ -60,6 +60,10 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "unordered_map": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "condition_variable": "cpp",
+        "map": "cpp",
+        "__tree": "cpp",
+        "thread": "cpp"
     }
 }

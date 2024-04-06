@@ -11,6 +11,12 @@ Running the game:
 
 - ./SpacemanGame
 
+This branch is currently working on implementing mutexes. Please run the below command to test:
+g++ -std=c++17 -pthread main.cpp User.cpp Gameroom.cpp Utils.cpp -o SecondSpacemanGame
+
+
+- ./SpacemanGame
+
 ## Design and Implementation
 
 1. Base class for spaceman game
