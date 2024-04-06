@@ -1,31 +1,36 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#pragma comment(lib, "ws2_32.lib")
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#endif
 
 constexpr int PORT = 8080;
 struct GameRoom
 {
-    int name;
+    std::string name; // Changed int to std::string
     int numPlayers;
 };
 
-std::vector<GameRoom> activeGameRooms; // vector list to store all active game rooms
+std::vector<GameRoom> activeGameRooms;
 
-// get all active game rooms to send to client
 std::string getActiveRooms()
 {
     std::string roomList;
     for (const auto &room : activeGameRooms)
     {
-        roomList += "Room Name: " + std::to_string(room.name) + ", Players: " + std::to_string(room.numPlayers) + "\n";
+        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.numPlayers) + "\n";
     }
     return roomList;
 }
 
-GameRoom createGameRoom(std::string roomName) // this needs to create a new thread, send the client to it, and new instance of spaceman game
+GameRoom createGameRoom(std::string roomName)
 {
     GameRoom newRoom;
     newRoom.name = roomName;
@@ -34,52 +39,41 @@ GameRoom createGameRoom(std::string roomName) // this needs to create a new thre
     return newRoom;
 }
 
-// handle incoming client connections
 void handleClient(int clientSocket)
 {
     char buffer[1024];
     int bytesRead;
 
-    while ((bytesRead = read(clientSocket, buffer, sizeof(buffer))) > 0)
+    while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0)
     {
         std::string request(buffer, bytesRead);
 
-        if (request == "GET_ACTIVE_ROOMS") // respond to client request for a list of open game rooms
+        if (request == "GET_ACTIVE_ROOMS")
         {
             std::string roomList = getActiveRooms();
-            write(clientSocket, roomList.c_str(), roomList.size());
+            send(clientSocket, roomList.c_str(), roomList.size(), 0);
         }
-        else if (request.find("CREATE_ROOM") == 0) // create a new game room
+        else if (request.find("CREATE_ROOM") == 0)
         {
-            // parse the room name from the request
-            size_t pos = request.find(" "); // find first space
+            size_t pos = request.find(" ");
             if (pos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1); // find room name after space
-
-                // add new room to the list of active game rooms
+                std::string roomName = request.substr(pos + 1);
                 GameRoom newRoom = createGameRoom(roomName);
-                // call function to make player join the new game room
-                // joinRoom(roomName, clientSocket); //joing the player into the newwly created room
                 newRoom.numPlayers = 1;
                 activeGameRooms.push_back(newRoom);
             }
         }
         else if (request.find("JOIN_ROOM") == 0)
         {
-            // parse the room name from the request
-            size_t pos = request.find(" "); // find first space
+            size_t pos = request.find(" ");
             if (pos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1); // find room name after space
-
-                // call function to handle join room request
-                // joinRoom(roomName, clientSocket);
+                std::string roomName = request.substr(pos + 1);
             }
         }
         else if (request == "LEAVE_ROOM")
         {
-            // needs to know which room the client wants to leave
         }
         else
         {
@@ -87,13 +81,24 @@ void handleClient(int clientSocket)
         }
     }
 
-    // Cclose the socker connection
+#ifdef _WIN32
+    closesocket(clientSocket);
+#else
     close(clientSocket);
+#endif
 }
 
 int main()
 {
-    // create a dedicated socket for clients to join
+#ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        std::cerr << "WSAStartup failed\n";
+        return 1;
+    }
+#endif
+
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
     {
@@ -101,7 +106,6 @@ int main()
         return 1;
     }
 
-    // bind socket to port 8080
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
@@ -110,24 +114,29 @@ int main()
     if (bind(serverSocket, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) == -1)
     {
         std::cerr << "Error binding server socket\n";
+#ifdef _WIN32
+        closesocket(serverSocket);
+#else
         close(serverSocket);
+#endif
         return 1;
     }
 
-    // Listen for incoming connections
     if (listen(serverSocket, 10) == -1)
     {
         std::cerr << "Error listening on server socket\n";
+#ifdef _WIN32
+        closesocket(serverSocket);
+#else
         close(serverSocket);
+#endif
         return 1;
     }
 
     std::cout << "Server listening on port: " << PORT << std::endl;
 
-    // loop to continually accept new connections
     while (true)
     {
-        // accept a new client
         sockaddr_in clientAddr;
         socklen_t clientAddrSize = sizeof(clientAddr);
         int clientSocket = accept(serverSocket, reinterpret_cast<sockaddr *>(&clientAddr), &clientAddrSize);
@@ -137,13 +146,13 @@ int main()
             continue;
         }
 
-        // spawn a client thread to handle the new connection
         std::thread clientThread(handleClient, clientSocket);
-        clientThread.detach(); // Detach the thread to allow it to run independently
+        clientThread.detach();
     }
 
-    // Close the server socket (this code is unreachable in this example)
-    close(serverSocket);
+#ifdef _WIN32
+    WSACleanup();
+#endif
 
     return 0;
 }
