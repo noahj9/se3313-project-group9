@@ -32,7 +32,7 @@ std::string getActiveRooms()
     for (const auto &room : activeGameRooms)
     {
         // Assume Gameroom has a method to retrieve its name and number of players
-        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.users.size()) + "\n";
+        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.clients.size()) + "\n";
     }
     return roomList;
 }
@@ -83,12 +83,7 @@ void handleClient(int clientSocket)
         }
         else if (request.find("CREATE_ROOM") == 0)
         {
-            size_t pos = request.find(" ");
-            if (pos != std::string::npos)
-            {
-                std::string roomName = request.substr(pos + 1);
-                createGameRoom(roomName);
-            }
+            createGameRoom(clientSocket);
         }
         else if (request.find("JOIN_ROOM") == 0)
         {
