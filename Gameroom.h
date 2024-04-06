@@ -7,10 +7,12 @@
 #include <mutex>
 #include <future>
 #include <atomic>
+#include <unordered_map>
+#include <string>
 #include "User.h"
-
 class Gameroom {
 private:
+    std::unordered_map<std::string, User> usersInGame;
     double multiplier; // Current game multiplier
     bool gameInProgress; // Flag to check if a game is currently in progress
     mutable std::mutex gameMutex; // Mutex for synchronizing access to game state

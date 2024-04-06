@@ -25,19 +25,24 @@ void Gameroom::addUser(const std::string& userId, double initialBalance) {
     if (!result.second) {
         std::cout << "User " << userId << " already exists. No new user added." << std::endl;
     } else {
+        usersInGame[userId] = result.first->second; // Add to game-specific list
         std::cout << "User " << userId << " has been added with an initial balance of $" << initialBalance << "." << std::endl;
     }
 }
 
 void Gameroom::listAllUsers() const {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    if (globalUsers.empty()) {
-        std::cout << "There are no globalUsers." << std::endl;
+    if (usersInGame.empty()) {
+        std::cout << "There are no users currently in the game." << std::endl;
         return;
     }
-    std::cout << "List of all globalUsers and their balances:" << std::endl;
-    for (const auto& [id, user] : globalUsers) {
-        std::cout << "User: " << id << ", Balance: $" << user.balance << std::endl;
+    std::cout << "List of all inGameUsers and their balances:" << std::endl;
+    for (const auto& pair : usersInGame) {
+        const User& user = pair.second;
+        std::cout << "User: " << user.id 
+                  << ", Balance: $" << user.balance 
+                  << ", Bet Amount: $" << user.betAmount 
+                  << std::endl;
     }
 }
 
@@ -154,6 +159,7 @@ double Gameroom::getCurrentMultiplier() const {
 
 void Gameroom::removeUser(const std::string& userId) {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    globalUsers.erase(userId); // Remove the user from the game
+    globalUsers.erase(userId);
+    usersInGame.erase(userId); 
 }
 
