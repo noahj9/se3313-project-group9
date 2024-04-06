@@ -54,6 +54,7 @@ public:
 std::unordered_map<std::string, User> users; // Mapping from user IDs to user objects
 std::mutex usersMutex; // Global mutex for synchronizing access to the users
 
+// Assuming this function is declared above the SpacemanGame class or in another header file included before SpacemanGame
 void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
     std::string userInput;
     while (!stopRequested) {
@@ -230,7 +231,6 @@ class GameRoomManager {
 private:
     std::unordered_map<std::string, std::unique_ptr<SpacemanGame>> rooms;
     std::unordered_map<std::string, std::string> userRooms; // Map from userID to roomName
-    std::unordered_map<std::string, User> globalUsers;
     mutable std::mutex managerMutex;
 
 public:
@@ -238,6 +238,16 @@ public:
         // std::lock_guard<std::mutex> lock(managerMutex); --> Already locked in the joinOrCreateRoom function
         rooms.emplace(roomName, std::make_unique<SpacemanGame>());
     }
+
+    // void addUserToRoom(const std::string& userId, const std::string& roomName, double initialBalance) {
+    //     std::lock_guard<std::mutex> lock(managerMutex);
+    //     if (rooms.find(roomName) != rooms.end()) {
+    //         rooms[roomName]->addUser(userId, initialBalance);
+    //         userRooms[userId] = roomName;
+    //     } else {
+    //         std::cout << "Room does not exist." << std::endl;
+    //     }
+    // }
 
     void listRooms() {
         std::lock_guard<std::mutex> lock(managerMutex);
@@ -298,10 +308,10 @@ public:
     // Function for joining a room, checks if user is already in a different room
     void joinOrCreateRoom(const std::string& userId, const std::string& roomName) {
         std::lock_guard<std::mutex> lock(managerMutex);
-        // std::lock_guard<std::mutex> usersLock(usersMutex);
+        std::lock_guard<std::mutex> usersLock(usersMutex);
 
         // Check if the user exists
-        if (globalUsers.find(userId) == globalUsers.end()) {
+        if (users.find(userId) == users.end()) {
             std::cout << "Error: User " << userId << " does not exist globally. Please register before joining a room." << std::endl;
             return;
         }
@@ -320,8 +330,8 @@ public:
         }
 
         // Add user to the room (this could be a new join or a switch from the default room)
-        // rooms[roomName]->addUser(userId, globalUsers[userId].balance);
-        rooms.at(roomName)->addUser(userId, globalUsers.at(userId).balance);
+        // rooms[roomName]->addUser(userId, users[userId].balance);
+        rooms.at(roomName)->addUser(userId, users.at(userId).balance);
         userRooms[userId] = roomName;
         std::cout << "User " << userId << " joined room: " << roomName << std::endl;
     }
@@ -357,25 +367,24 @@ public:
 
     bool isUserInGame(const std::string& userId) {
         std::lock_guard<std::mutex> lock(managerMutex);
-        auto roomIter = userRooms.find(userId);
-        if (roomIter != userRooms.end()) { // Check if the user is in any room
-            std::lock_guard<std::mutex> usersLock(usersMutex); // Ensure thread safety when accessing global users
-            auto userIter = users.find(userId);
-            if (userIter != users.end()) {
-                // Check the user's inGame flag directly from the global users map
-                return userIter->second.inGame;
-            }
+        std::lock_guard<std::mutex> usersLock(usersMutex);
+
+        auto it = users.find(userId);
+        if (it != users.end()) {
+            return it->second.inGame;
         }
-        return false; // User is not in a game if none of the above conditions are true
+        return false;
     }
 
     // Adds a user to the global list without adding them to any specific room
     void addUserToGlobalList(const std::string& userId, double initialBalance) {
         std::lock_guard<std::mutex> lock(managerMutex);
-        // Check if the user already exists in globalUsers map
-        if (globalUsers.find(userId) == globalUsers.end()) {
+        std::lock_guard<std::mutex> usersLock(usersMutex);
+
+        // Check if the user already exists in users map
+        if (users.find(userId) == users.end()) {
             // User not found, add new user
-            globalUsers.emplace(userId, User(userId, initialBalance));
+            users.emplace(userId, User(userId, initialBalance));
             std::cout << "Global user added with ID: " << userId << " and balance: $" << initialBalance << std::endl;
         } else {
             // User already exists, do not add and notify

@@ -7,3 +7,8 @@ Building the game:
 
 Running the game:
 - ./SpacemanGame
+
+This branch is currently working on implementing mutexes. Please run the below command to test:
+g++ -std=c++17 -pthread placeholder.cpp -o SecondSpacemanGame
+
+./SecondSpacemanGame
