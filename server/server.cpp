@@ -1,6 +1,12 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <mutex>
+#include <unordered_map>
+#include <string>
+#include <atomic>
+#include <future>
+#include "Gameroom.h" // Include the Gameroom class header file
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -11,31 +17,54 @@
 #endif
 
 constexpr int PORT = 8080;
-struct GameRoom
-{
-    std::string name; // Changed int to std::string
-    int numPlayers;
-};
 
-std::vector<GameRoom> activeGameRooms;
+// Global variable for active gamerooms
+std::vector<Gameroom> activeGameRooms;
+int roomCounter = 0;
+
+// Mutex for synchronizing access to activeGameRooms
+std::mutex gameRoomsMutex;
 
 std::string getActiveRooms()
 {
     std::string roomList;
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
     for (const auto &room : activeGameRooms)
     {
-        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.numPlayers) + "\n";
+        // Assume Gameroom has a method to retrieve its name and number of players
+        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.users.size()) + "\n";
     }
     return roomList;
 }
 
-GameRoom createGameRoom(std::string roomName)
+void joinGameRoom(std::string roomName, int clientSocket)
 {
-    GameRoom newRoom;
-    newRoom.name = roomName;
-    newRoom.numPlayers = 1;
-    activeGameRooms.push_back(newRoom);
-    return newRoom;
+    // find a room based on its name
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    for (auto &room : activeGameRooms)
+    {
+        if (room.name == roomName)
+        {
+            room.acceptClient(clientSocket);
+            return;
+        }
+    }
+
+    // If the desired room is not found, you can handle the error or take appropriate action
+    std::cerr << "Desired room not found\n";
+}
+
+void createGameRoom(int clientSocket)
+{
+    // Create a new gameroom and add it to the list of active gamerooms
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    activeGameRooms.emplace_back("Room_" + roomCounter);
+    roomCounter++;
+
+    // Spawn a new thread for the game room
+    std::thread roomThread(&Gameroom::acceptClient, &activeGameRooms.back(), clientSocket);
+    roomThread.detach();
+    std::cout << "New room created " << roomCounter - 1 << std::endl;
 }
 
 void handleClient(int clientSocket)
@@ -58,21 +87,22 @@ void handleClient(int clientSocket)
             if (pos != std::string::npos)
             {
                 std::string roomName = request.substr(pos + 1);
-                GameRoom newRoom = createGameRoom(roomName);
-                newRoom.numPlayers = 1;
-                activeGameRooms.push_back(newRoom);
+                createGameRoom(roomName);
             }
         }
         else if (request.find("JOIN_ROOM") == 0)
         {
+            // Extract room name from request
             size_t pos = request.find(" ");
             if (pos != std::string::npos)
             {
                 std::string roomName = request.substr(pos + 1);
+                joinGameRoom(roomName, clientSocket); // Pass the client socket
             }
         }
         else if (request == "LEAVE_ROOM")
         {
+            // Implement leaving a gameroom
         }
         else
         {
