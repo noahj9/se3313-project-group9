@@ -298,7 +298,7 @@ public:
         std::lock_guard<std::mutex> lock(managerMutex);
         if (userRooms.find(userId) == userRooms.end()) {
             // User is not in any room
-            std::cout << "Available commands: add, listRooms, join, exit\n";
+            std::cout << "Available commands: listRooms, join, exit\n";
         } else {
             // User is in a room
             std::cout << "Available commands: bet, start, status, leave, stop (if in a game)\n";
@@ -412,6 +412,11 @@ int main() {
 
         clearExcessConsole();
 
+        // Check if the user exists. If not, then add them to the global list with an initial balance of $10
+        if (users.find(userId) == users.end()) {
+            manager.addUserToGlobalList(userId, 10);
+        }
+
         // Now that userId is initialized, show available actions based on user status
         manager.showAvailableActions(userId);
 
@@ -420,16 +425,7 @@ int main() {
 
         clearExcessConsole();
 
-        if (command == "add") {
-            std::cout << "Enter initial balance: ";
-            std::cin >> amount;
-            if (amount <= 0) {
-                std::cout << "Invalid amount. Please enter a positive number." << std::endl;
-                continue;
-            }
-            // Users are only added to the manager, not directly into a game.
-            manager.addUserToGlobalList(userId, amount);
-        } else if (command == "listRooms") {
+        if (command == "listRooms") {
             manager.listRooms();
         } else if (command == "status") {
             manager.showRoomStatus(userId);
