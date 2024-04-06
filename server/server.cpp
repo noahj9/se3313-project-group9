@@ -21,6 +21,9 @@ constexpr int PORT = 8080;
 // Global variable for active gamerooms
 std::vector<Gameroom> activeGameRooms;
 int roomCounter = 0;
+std::unordered_map<std::string, User> globalUsers;
+std::mutex usersMutex;
+std::atomic<bool> stopRequested(false);
 
 // Mutex for synchronizing access to activeGameRooms
 std::mutex gameRoomsMutex;
@@ -58,8 +61,8 @@ void createGameRoom(int clientSocket)
 {
     // Create a new gameroom and add it to the list of active gamerooms
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
-    activeGameRooms.emplace_back("Room_" + roomCounter);
-    roomCounter++;
+    std::string roomName = "Room_" + roomCounter++;
+    activeGameRooms.emplace_back(roomName);
 
     // Spawn a new thread for the game room
     std::thread roomThread(&Gameroom::acceptClient, &activeGameRooms.back(), clientSocket);

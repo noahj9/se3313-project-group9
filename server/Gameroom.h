@@ -21,8 +21,23 @@ public:
     std::string name;
     std::vector<int> clients;
 
-    // Constructor to initialize the game
+    // Default constructor
     Gameroom();
+
+    // Parameterized constructor
+    Gameroom(const std::string& name);
+
+    // Move constructor
+    // Gameroom(Gameroom&& other) noexcept;
+    Gameroom(Gameroom&& other);
+
+    // Move assignment operator
+    // Gameroom& operator=(Gameroom&& other) noexcept;
+    Gameroom& operator=(Gameroom&& other);
+
+    // Deleting the copy constructor and copy assignment operator
+    Gameroom(const Gameroom&) = delete;
+    Gameroom& operator=(const Gameroom&) = delete;
 
     // Method declarations
     void acceptClient(int clientSocket);

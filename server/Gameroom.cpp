@@ -1,10 +1,12 @@
 #include "Gameroom.h"
+#include "User.h"
 #include "Utils.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
 #include <cstring> // For memset
 #include <string>
+#include <sstream>
 
 #ifdef _WIN32
 #include <winsock2.h> // For send
@@ -15,10 +17,25 @@
 extern std::unordered_map<std::string, User> globalUsers;                                                     // Use the external global globalUsers map
 extern std::mutex usersMutex;                                                                                 // Use the external global mutex for globalUsers
 extern std::atomic<bool> stopRequested;                                                                       // Use the external stopRequested
-extern void handleUserInput(std::atomic<bool> &stopRequested, std::function<void(std::string)> stopFunction); // Declare external function
 
-// Constructor
-Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false) {}
+// Constructor with parameter 
+Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false), name("") {}
+Gameroom::Gameroom(const std::string &roomName) : multiplier(1.0), gameInProgress(false), name(roomName) {}
+Gameroom::Gameroom(Gameroom&& other) : multiplier(1.0), gameInProgress(false), name(other.name), clients(other.clients) {}
+
+void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
+    std::string userInput;
+    while (!stopRequested) {
+        if (std::getline(std::cin, userInput)) { // This will still block, but now it's in a separate thread
+            std::istringstream iss(userInput);
+            std::string command, userId;
+            iss >> command >> userId;
+            if (command == "stop") {
+                stopFunction(userId);
+            }
+        }
+    }
+}
 
 void Gameroom::acceptClient(int clientSocket)
 {
@@ -33,7 +50,7 @@ void Gameroom::acceptClient(int clientSocket)
     }
 
     // print out the clients in the game room
-    std::cout << "Clients in the game room " << name << ":" << std::endl;
+    std::cout << "Clients in the game room " << name << ":\n" << std::endl;
     for (int clientSocket : clients)
     {
         std::cout << "Client socket: " << clientSocket << std::endl;
