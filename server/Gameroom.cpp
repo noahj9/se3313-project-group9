@@ -8,15 +8,20 @@
 #include <string>
 #include <sstream>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
 #ifdef _WIN32
 #include <winsock2.h> // For send
 #else
 #include <unistd.h> // For write
 #endif
 
-extern std::unordered_map<std::string, User> globalUsers;                                                     // Use the external global globalUsers map
-extern std::mutex usersMutex;                                                                                 // Use the external global mutex for globalUsers
-extern std::atomic<bool> stopRequested;                                                                       // Use the external stopRequested
+extern std::unordered_map<std::string, User> globalUsers;
+extern std::mutex usersMutex;
+extern std::atomic<bool> stopRequested;
 
 // Constructor with parameter 
 Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false), name("") {}

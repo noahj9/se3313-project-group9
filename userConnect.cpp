@@ -34,11 +34,23 @@ int main() {
         return 1;
     }
 
-    std::cout << "Connected to the server!\nPress 'c' to create a game room.\n";
+    std::cout << "Connected to the server!\nEnter 'create' to create a game room.\nEnter 'get' to get all active rooms\n";
 
-    char input = std::cin.get();
-    if (input == 'c') {
-        const std::string createRoomCmd = "CREATE_ROOM MyRoomName"; // Replace with actual room name or logic to get it
+    std::string command;
+    std::cin >> command;
+
+    if (command == "create") {
+        const std::string createRoomCmd = "CREATE_ROOM";
+        send(sock, createRoomCmd.c_str(), createRoomCmd.size(), 0);
+
+        // Now wait for the server's response
+        char buffer[1024] = {0};
+        int bytesRead = recv(sock, buffer, sizeof(buffer), 0);
+        if (bytesRead > 0) {
+            std::cout << "Server response: " << std::string(buffer, bytesRead) << "\n";
+        }
+    } else if (command == "get") {
+        const std::string createRoomCmd = "GET_ACTIVE_ROOMS";
         send(sock, createRoomCmd.c_str(), createRoomCmd.size(), 0);
 
         // Now wait for the server's response

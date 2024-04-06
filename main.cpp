@@ -22,7 +22,7 @@ std::atomic<bool> stopRequested(false);
 
 // Users are global because this will be updated by the socket rather than by me :)
 std::unordered_map<std::string, User> globalUsers;
-std::mutex usersMutex; // Global mutex for synchronizing access to the users
+mutable std::mutex usersMutex; // Global mutex for synchronizing access to the users
 
 void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
     std::string userInput;
