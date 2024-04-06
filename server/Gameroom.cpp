@@ -3,6 +3,14 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <cstring> // For memset
+#include <string>
+
+#ifdef _WIN32
+#include <winsock2.h> // For send
+#else
+#include <unistd.h> // For write
+#endif
 
 extern std::unordered_map<std::string, User> globalUsers;                                                     // Use the external global globalUsers map
 extern std::mutex usersMutex;                                                                                 // Use the external global mutex for globalUsers
@@ -11,6 +19,26 @@ extern void handleUserInput(std::atomic<bool> &stopRequested, std::function<void
 
 // Constructor
 Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false) {}
+
+void Gameroom::acceptClient(int clientSocket)
+{
+    // add client socket to list of managed sockets by this game room
+    clients.push_back(clientSocket);
+
+    // send a socket connection msg to client saying they joined properly
+    std::string message = "You have successfully joined the game room: " + name + "\n";
+    if (send(clientSocket, message.c_str(), message.length(), 0) == -1)
+    {
+        std::cerr << "Error sending join message to client\n";
+    }
+
+    // print out the clients in the game room
+    std::cout << "Clients in the game room " << name << ":" << std::endl;
+    for (int clientSocket : clients)
+    {
+        std::cout << "Client socket: " << clientSocket << std::endl;
+    }
+}
 
 // Adds a user to the game or updates the user's initial balance if they already exist
 void Gameroom::addUser(const std::string &userId, double initialBalance)

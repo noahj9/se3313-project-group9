@@ -19,7 +19,7 @@ private:
 
 public:
     std::string name;
-    std::vector<User> users;
+    std::vector<int> clients;
 
     // Constructor to initialize the game
     Gameroom();
