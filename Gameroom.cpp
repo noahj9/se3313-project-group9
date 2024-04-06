@@ -1,18 +1,13 @@
 #include "Gameroom.h"
+#include "Utils.h"
 #include <iostream>
-#include <cmath> // For std::floor
-#include <chrono> // For std::chrono::seconds
-#include <thread> // For std::this_thread::sleep_for
+#include <chrono>
+#include <thread>
 
-extern std::unordered_map<std::string, User> users; // Use the external global users map
-extern std::mutex usersMutex; // Use the external global mutex for users
+extern std::unordered_map<std::string, User> globalUsers; // Use the external global globalUsers map
+extern std::mutex usersMutex; // Use the external global mutex for globalUsers
 extern std::atomic<bool> stopRequested; // Use the external stopRequested
 extern void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction); // Declare external function
-
-// Helper function
-double roundDown(double value) {
-    return std::floor(value * 100.0) / 100.0;
-}
 
 // Constructor
 Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false) {}
@@ -25,8 +20,8 @@ void Gameroom::addUser(const std::string& userId, double initialBalance) {
         return;
     }
 
-    // Directly use the global users map
-    auto result = users.emplace(userId, User(userId, roundDown(initialBalance)));
+    // Directly use the global globalUsers map
+    auto result = globalUsers.emplace(userId, User(userId, roundDown(initialBalance)));
     if (!result.second) {
         std::cout << "User " << userId << " already exists. No new user added." << std::endl;
     } else {
@@ -36,19 +31,19 @@ void Gameroom::addUser(const std::string& userId, double initialBalance) {
 
 void Gameroom::listAllUsers() const {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    if (users.empty()) {
-        std::cout << "There are no users." << std::endl;
+    if (globalUsers.empty()) {
+        std::cout << "There are no globalUsers." << std::endl;
         return;
     }
-    std::cout << "List of all users and their balances:" << std::endl;
-    for (const auto& [id, user] : users) {
+    std::cout << "List of all globalUsers and their balances:" << std::endl;
+    for (const auto& [id, user] : globalUsers) {
         std::cout << "User: " << id << ", Balance: $" << user.balance << std::endl;
     }
 }
 
 bool Gameroom::anyUserInGame() const {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    return std::any_of(users.begin(), users.end(), [](const auto& entry) { return entry.second.inGame; });
+    return std::any_of(globalUsers.begin(), globalUsers.end(), [](const auto& entry) { return entry.second.inGame; });
 }
 
 // Starts a new game, resetting necessary components and starting the multiplier increase
@@ -90,21 +85,21 @@ void Gameroom::startGame() {
         if (gameInProgress) {
             std::cout << "Cannot start a new game. A game is already in progress." << std::endl;
         } else {
-            std::cout << "Cannot start a new game. No users are ready." << std::endl;
+            std::cout << "Cannot start a new game. No globalUsers are ready." << std::endl;
         }
     }
 }
 
 void Gameroom::userStops(const std::string& userId) {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    auto it = users.find(userId);
-    if (it != users.end() && it->second.inGame) {
+    auto it = globalUsers.find(userId);
+    if (it != globalUsers.end() && it->second.inGame) {
         // User decides to stop, calculate their earnings based on the current multiplier
         double earnings = roundDown(it->second.betAmount * multiplier);
         it->second.balance = roundDown(it->second.balance + earnings);
         it->second.reset(); // Reset user's game state
         std::cout << "User " << userId << " stopped and secured " << earnings << std::endl;
-    } else if (it == users.end()) {
+    } else if (it == globalUsers.end()) {
         std::cout << "User " << userId << " not found." << std::endl;
     } else {
         std::cout << "User " << userId << " is not currently in a game." << std::endl;
@@ -114,7 +109,7 @@ void Gameroom::userStops(const std::string& userId) {
 // Ends the current game, calculating and updating user balances
 void Gameroom::endGame() {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    for (auto& [id, user] : users) {
+    for (auto& [id, user] : globalUsers) {
         if (user.inGame) {
             // user.balance += user.betAmount * multiplier; // Update balance based on final multiplier
             user.reset(); // Reset user state for the next game
@@ -134,8 +129,8 @@ bool Gameroom::isGameInProgress() const {
 void Gameroom::placeUserBet(const std::string& userId, double betAmount) {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
     // Use find() to check if the user exists in the map
-    auto it = users.find(userId);
-    if (it != users.end() && !gameInProgress) { // Check if user exists and game is not in progress
+    auto it = globalUsers.find(userId);
+    if (it != globalUsers.end() && !gameInProgress) { // Check if user exists and game is not in progress
         // Check if user has sufficient balance and is not already in a game
         if (it->second.balance >= betAmount && betAmount > 0) {
             it->second.placeBet(betAmount); // Place bet using the found user
@@ -145,7 +140,7 @@ void Gameroom::placeUserBet(const std::string& userId, double betAmount) {
         } else {
             std::cout << "User " << userId << " does not have enough balance to place a bet of $" << betAmount << std::endl;
         }
-    } else if (it == users.end()) {
+    } else if (it == globalUsers.end()) {
         std::cout << "User " << userId << " not found." << std::endl;
     } else if (gameInProgress) {
         std::cout << "Cannot place bet, the game is currently in progress." << std::endl;
@@ -159,6 +154,6 @@ double Gameroom::getCurrentMultiplier() const {
 
 void Gameroom::removeUser(const std::string& userId) {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    users.erase(userId); // Remove the user from the game
+    globalUsers.erase(userId); // Remove the user from the game
 }
 

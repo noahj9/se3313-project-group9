@@ -12,20 +12,16 @@
 #include <functional> // For std::function
 #include <vector>
 #include <condition_variable>
-#include <cmath>  // For floor
 #include <map>    // For room management
 #include "User.h"
 #include "Gameroom.h"
+#include "Utils.h"
 
 std::atomic<bool> stopRequested(false);
 // std::mutex userStopMutex;
 
-double roundDown(double value) {
-    return std::floor(value * 100.0) / 100.0;
-}
-
 // Users are global because this will be updated by the socket rather than by me :)
-std::unordered_map<std::string, User> users; // Mapping from user IDs to user objects
+std::unordered_map<std::string, User> globalUsers;
 std::mutex usersMutex; // Global mutex for synchronizing access to the users
 
 void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
@@ -46,7 +42,6 @@ class GameRoomManager {
 private:
     std::unordered_map<std::string, std::unique_ptr<Gameroom>> rooms;
     std::unordered_map<std::string, std::string> userRooms; // Map from userID to roomName
-    std::unordered_map<std::string, User> globalUsers;
     mutable std::mutex managerMutex;
 
 public:
@@ -176,13 +171,18 @@ public:
         auto roomIter = userRooms.find(userId);
         if (roomIter != userRooms.end()) { // Check if the user is in any room
             std::lock_guard<std::mutex> usersLock(usersMutex); // Ensure thread safety when accessing global users
-            auto userIter = users.find(userId);
-            if (userIter != users.end()) {
+            auto userIter = globalUsers.find(userId);
+            if (userIter != globalUsers.end()) {
                 // Check the user's inGame flag directly from the global users map
                 return userIter->second.inGame;
             }
         }
         return false; // User is not in a game if none of the above conditions are true
+    }
+
+    bool doesUserExists(const std::string& userId) const {
+        std::lock_guard<std::mutex> lock(managerMutex);
+        return globalUsers.find(userId) != globalUsers.end();
     }
 
     // Adds a user to the global list without adding them to any specific room
@@ -220,7 +220,7 @@ int main() {
         clearExcessConsole();
 
         // Check if the user exists. If not, then add them to the global list with an initial balance of $10
-        if (users.find(userId) == users.end()) {
+        if (!manager.doesUserExists(userId)) {
             manager.addUserToGlobalList(userId, 10);
         }
 

@@ -63,6 +63,7 @@
         "vector": "cpp",
         "condition_variable": "cpp",
         "map": "cpp",
-        "__tree": "cpp"
+        "__tree": "cpp",
+        "thread": "cpp"
     }
 }
