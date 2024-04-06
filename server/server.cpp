@@ -4,7 +4,6 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
-#pragma comment(lib, "ws2_32.lib")
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -138,7 +137,7 @@ int main()
     while (true)
     {
         sockaddr_in clientAddr;
-        socklen_t clientAddrSize = sizeof(clientAddr);
+        int clientAddrSize = sizeof(clientAddr);
         int clientSocket = accept(serverSocket, reinterpret_cast<sockaddr *>(&clientAddr), &clientAddrSize);
         if (clientSocket == -1)
         {
