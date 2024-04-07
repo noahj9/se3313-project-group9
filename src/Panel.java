@@ -74,11 +74,12 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             leftConstraints.anchor = GridBagConstraints.LINE_START;
             leftConstraints.insets = new Insets(5, 5, 5, 5);
 
-            JButton newGameButton = new JButton("New Game");
+            JButton newGameButton = new JButton("New Game Room");
             newGameButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("New Game button pressed");
+                    System.out.println("New Game Room button pressed");
+
                 }
             });
             add(newGameButton, leftConstraints);
@@ -153,11 +154,22 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             add(selectRoomButton, centerConstraints);
         }
     }
+    // bet - up and down arrow with bet balance
+    // cash out
+    // leave room 
+
+    public static void userJoin(){
+        //Logic for creating user 
+
+    }
+
     public static void main(String[] args) {
+        //User handling to add user -> create user 
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Loop of full animation");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 600);
+
             Panel mainPanel = new Panel();
             frame.add(mainPanel);
             frame.setVisible(true);
