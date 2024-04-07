@@ -7,7 +7,7 @@ import java.awt.event.ActionListener;
 public class Multiplier extends JPanel {
     private JLabel multiplierLabel;
     private Timer timer;
-    private double multiplier;
+    private double multiplier = 1.0;
     private int initialDelay = 1000;
     private double speedIncrease = 0.95;
     private MultiplierListener multiplierListener;
@@ -15,7 +15,7 @@ public class Multiplier extends JPanel {
     public Multiplier() {
         setLayout(new BorderLayout());
 
-        multiplierLabel = new JLabel("Multiplier: 0.00x");
+        multiplierLabel = new JLabel("Multiplier: 1.00x");
         multiplierLabel.setHorizontalAlignment(JLabel.CENTER);
         multiplierLabel.setFont(new Font("Arial", Font.BOLD, 24));
         add(multiplierLabel, BorderLayout.CENTER);
