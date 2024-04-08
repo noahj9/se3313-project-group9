@@ -119,7 +119,7 @@ void Gameroom::startGame()
 {
     if (!gameInProgress && anyUserInGame())
     {
-        std::cout << "Starting a new game... Type 'stop <userID>' to secure your bet at the current multiplier." << std::endl;
+        std::cout << "Starting a new game..." << std::endl;
         gameInProgress = true;
         stopRequested = false;
 
@@ -129,22 +129,28 @@ void Gameroom::startGame()
 
             // TODO: Chris, please accept this on the frontend **
             send(clientSocket, "START_GAME", strlen("START_GAME"), 0);
-            std::cout << "Sent START_GAME message to user " << userId << "at client socket: " << clientSocket << std::endl;
+            std::cout << "Sent START_GAME message to user " << userId << " at client socket: " << clientSocket << std::endl;
         }
-
-        // Game loop starts here
-        while (gameInProgress)
-        {
-            if ((rand() % 100) < 5)
-            {              // There's a random chance to end the game
-                endGame(); // End the game if the random condition is met
-                break;     // Exit the while loop since the game has ended
-            }
-        }
-
-        stopRequested = true;   // Signal the user input thread to stop
-        gameInProgress = false; // Mark the game as no longer in progress
     }
+}
+
+void Gameroom::gameCaller()
+{
+    sleep(10);
+    startGame();
+    while (gameInProgress)
+    {
+        int num = rand() % 100;
+        sleep(1);
+        if ((num < 5))
+        {
+            endGame();
+            break;
+        }
+    }
+    stopRequested = true;
+    gameInProgress = false;
+    gameCaller();
 }
 
 // Ends the current game, calculating and updating user balances
@@ -168,8 +174,6 @@ void Gameroom::endGame()
              ("BALANCE " + std::to_string(globalUsers[userId].balance)).size(), 0);
     }
     std::cout << "Game ended." << std::endl;
-    sleep(10);   // Sleep for 10 seconds to allow clients to see the end of the game
-    startGame(); // Start a new game after the previous one has ended
 }
 
 // Returns whether a game is currently in progress

@@ -135,9 +135,14 @@ void leaveRoom(std::string roomName, std::string userId) // TODO James
     std::cerr << "Desired room not found for leaveRoom function\n";
 }
 
-void createGameRoom(std::string userId)
-{
+void gameRoomThread(Gameroom& room) {
+    // Run the game room operations
+    room.gameCaller();
+}
+
+void createGameRoom(std::string userId) {
     int clientSocket = globalUsers[userId].socket; // must figure out how to get the socket from this
+
     // Create a new gameroom and add it to the list of active gamerooms
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
     std::string roomName = "Room_" + std::to_string(roomCounter++);
@@ -145,17 +150,9 @@ void createGameRoom(std::string userId)
 
     std::cout << "New room created " << roomName << std::endl;
 
-    // start the game in the new gameroom
-
-    for (auto &room : activeGameRooms)
-    {
-        if (room.name == roomName)
-        {
-            room.startGame();
-            std::cout << "Game started in room: " << roomName << std::endl;
-            break;
-        }
-    }
+    // Start a new thread for the game room
+    std::thread roomThread(gameRoomThread, std::ref(activeGameRooms.back()));
+    roomThread.detach(); // Detach the thread to run independently
 }
 
 void handleClient(std::string userId)

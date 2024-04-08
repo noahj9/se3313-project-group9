@@ -46,7 +46,7 @@ public:
     void cashoutForUser(std::string userId, double multiplier);
     bool anyUserInGame() const;
     void startGame();
-    void userStops(const std::string &userId);
+    void gameCaller();
     void endGame();
     bool isGameInProgress() const;
     void placeUserBet(const std::string &userId, double betAmount);
