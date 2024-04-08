@@ -16,10 +16,10 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     private CenterPanel centerPanel;
 
     public Panel() {
-        // setLayout(new BorderLayout());
-        // countdownPanel = new CountdownPanel();
-        // countdownPanel.addCountdownListener(this);
-        // add(countdownPanel, BorderLayout.NORTH);
+        setLayout(new BorderLayout());
+        countdownPanel = new CountdownPanel();
+        countdownPanel.addCountdownListener(this);
+        add(countdownPanel, BorderLayout.NORTH);
 
         leftPanel = new LeftPanel();
         rightPanel = new RightPanel();
@@ -83,7 +83,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     System.out.println("New Game button pressed");
                     try {
                         // open socket connection
-                        Socket socket = new Socket("localhost", 2003);
+                        // TODO: change localhost to the AWS server IP address
+                        Socket socket = new Socket("127.0.0.1", 2003);
 
                         // create output stream
                         OutputStream outputStream = socket.getOutputStream();
@@ -93,6 +94,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         out.println("CREATE_ROOM");
 
                         // close the connection
+                        // TODO: @noah make a GLOBAL socket for the client, so we can always use the same socket
                         socket.close();
 
                         System.out.println("New Game button pressed and CREATE_ROOM message sent");
@@ -108,6 +110,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             refreshButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    // TODO: Send "GET_ACTIVE_ROOMS" message to the server
+                    // Refresh rooms :)
                     System.out.println("Refresh Room List button pressed");
                 }
             });
@@ -160,10 +164,14 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             selectRoomButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    // TODO: @noah Same socket issue as above
+
                     try {
-                        Socket socket = new Socket("localhost", 8080);
+                        Socket socket = new Socket("127.0.0.1", 2003);
                         OutputStream outputStream = socket.getOutputStream();
-                        String request = "JOIN_ROOM Room1";
+
+                        // TODO: This will have to be an exact room name based on what's selected
+                        String request = "JOIN_ROOM Room_0 userID";
                         outputStream.write(request.getBytes());
                         socket.close();
                     } catch (IOException ex) {
@@ -178,9 +186,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     // cash out
     // leave room
 
-    public static void userJoin() {
-        // Logic for creating user
-
+    public static void initializeUser() {
+        // Logic for creating user --> join the server through a socket connection
+        // Should receive a "userId" (string) from the server. Store this in a global variable
     }
 
     public static void main(String[] args) {

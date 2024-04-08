@@ -19,7 +19,9 @@ private:
 
 public:
     std::string name;
-    std::vector<int> clients;
+
+    // clients = users --> string holding the user id
+    std::vector<std::string> clients;
 
     // Default constructor
     Gameroom();
@@ -40,8 +42,8 @@ public:
     Gameroom& operator=(const Gameroom&) = delete;
 
     // Method declarations
-    void acceptClient(int clientSocket);
-    void addUser(const std::string &userId, double initialBalance);
+    void acceptClient(std::string userId);
+    void removeClient(std::string userId);
     bool anyUserInGame() const;
     void startGame();
     void userStops(const std::string &userId);
@@ -49,7 +51,6 @@ public:
     bool isGameInProgress() const;
     void placeUserBet(const std::string &userId, double betAmount);
     double getCurrentMultiplier() const;
-    void removeUser(const std::string &userId);
     void listAllUsers() const;
 };
 

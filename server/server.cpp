@@ -16,7 +16,7 @@
 #include <unistd.h>
 #endif
 
-constexpr int PORT = 8080;
+constexpr int PORT = 2003;
 
 // Global variable for active gamerooms
 std::vector<Gameroom> activeGameRooms;
@@ -24,26 +24,70 @@ int roomCounter = 0;
 std::unordered_map<std::string, User> globalUsers;
 std::mutex usersMutex;
 std::atomic<bool> stopRequested(false);
+int numberOfUsers = 0;
 
 // Mutex for synchronizing access to activeGameRooms
 std::mutex gameRoomsMutex;
+
+std::string initializeUser () {
+    // Create a new user object
+    // Initialize balance to $10, bet amount to 0, and inGame flag to false --> Call the damn constructor 
+    // ** User id = numberOfUsers --> make it a string **
+    // numberOfUsers += 1
+    // Send user id back to client
+
+    std::lock_guard<std::mutex> lock(usersMutex);
+
+    // return user's id
+}
 
 std::string getActiveRooms() {
     std::string roomList;
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
     for (const auto &room : activeGameRooms) {
         // Assume Gameroom has a method to retrieve its name and number of players
-        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.clients.size()) + "\n";
+        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.clients.size()) + "";
+
+        // Testing
+        roomList += "Player names: ";
+        for (int clientSocket : room.clients) {
+            roomList += std::to_string(clientSocket) + " ";
+        }
+        roomList += "\n";
+        // End testing
     }
+    std::cout << "Active rooms response: " << roomList << std::endl;
     return roomList;
 }
 
-void joinGameRoom(std::string roomName, int clientSocket) {
+void joinGameRoom(std::string roomName, std::string userId) {
+    // Joining an ALREADY created room (existing)
+    // If the desired room is found, add the client to the room by adding their USER ID to the room's clients list
+
     // find a room based on its name
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
     for (auto &room : activeGameRooms) {
         if (room.name == roomName) {
-            room.acceptClient(clientSocket);
+            // TODO: Change this to be the USER ID
+            room.acceptClient(userId);
+            return;
+        }
+    }
+
+    // If the desired room is not found, you can handle the error or take appropriate action
+    std::cerr << "Desired room not found\n";
+}
+
+void leaveRoom(std::string roomName, std::string userId) {
+    // Leaving an ALREADY created room (existing)
+    // If the desired room is found, remove the client from the room by removing their USER ID from the room's clients list
+
+    // find a room based on its name
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    for (auto &room : activeGameRooms) {
+        if (room.name == roomName) {
+            // TODO: Change this to be the USER ID
+            room.removeClient(userId);
             return;
         }
     }
@@ -81,11 +125,22 @@ void handleClient(int clientSocket) {
             size_t pos = request.find(" ");
             if (pos != std::string::npos) {
                 std::string roomName = request.substr(pos + 1);
-                joinGameRoom(roomName, clientSocket); // Pass the client socket
+                std::string userId = request.substr(pos + 2);
+                // TODO: Change to the user ID
+                joinGameRoom(roomName, userId); // Pass the client socket
             }
         }
         else if (request == "LEAVE_ROOM") {
-            // Implement leaving a gameroom
+            // TODO: Implement leave room method
+            // We would expect this to be something like the below:
+
+            size_t pos = request.find(" ");
+            if (pos != std::string::npos) {
+                std::string roomName = request.substr(pos + 1);
+                std::string userId = request.substr(pos + 2);
+                // TODO: Change to the user ID
+                leaveRoom(roomName, userId)
+            }
         } else {
             std::cerr << "Invalid request from client.\n";
         }

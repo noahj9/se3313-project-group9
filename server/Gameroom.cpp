@@ -28,6 +28,10 @@ Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false), name("") {}
 Gameroom::Gameroom(const std::string &roomName) : multiplier(1.0), gameInProgress(false), name(roomName) {}
 Gameroom::Gameroom(Gameroom&& other) : multiplier(1.0), gameInProgress(false), name(other.name), clients(other.clients) {}
 
+
+// TODO: Change this to accept the client's BUTTON PRESS ("CASHOUT")
+// This function WAS to ensure a second thread was used to ensure the COMMAND LINE game could be played.
+// Likely do not need this function in the final implementation.
 void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
     std::string userInput;
     while (!stopRequested) {
@@ -42,10 +46,15 @@ void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::s
     }
 }
 
+
+// TODO: Change to accept user ID
 void Gameroom::acceptClient(int clientSocket)
 {
     // add client socket to list of managed sockets by this game room
     clients.push_back(clientSocket);
+
+    // TODO: Get the client's socket from the "globalUsers"
+    // int clientSocket = globalUsers[userId].socket;
 
     // send a socket connection msg to client saying they joined properly
     std::string message = "You have successfully joined the game room: " + name + "\n";
@@ -54,7 +63,7 @@ void Gameroom::acceptClient(int clientSocket)
         std::cerr << "Error sending join message to client\n";
     }
 
-    // print out the clients in the game room
+    // TODO: print out the clients in the game room --> can be removed if wanted
     std::cout << "Clients in the game room " << name << ":\n" << std::endl;
     for (int clientSocket : clients)
     {
@@ -62,42 +71,23 @@ void Gameroom::acceptClient(int clientSocket)
     }
 }
 
-// Adds a user to the game or updates the user's initial balance if they already exist
-void Gameroom::addUser(const std::string &userId, double initialBalance)
+// TODO: Change to accept user ID
+void Gameroom::removeClient(std::string userId)
 {
-    std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    if (initialBalance < 0)
-    {
-        std::cout << "Cannot add user " << userId << " with a negative balance." << std::endl;
-        return;
-    }
-
-    // Directly use the global globalUsers map
-    auto result = globalUsers.emplace(userId, User(userId, roundDown(initialBalance)));
-    if (!result.second)
-    {
-        std::cout << "User " << userId << " already exists. No new user added." << std::endl;
-    }
-    else
-    {
-        std::cout << "User " << userId << " has been added with an initial balance of $" << initialBalance << "." << std::endl;
-    }
+    // similar logic to acceptClient, but remove the client socket from the list of userIds in the game room
 }
 
+// Use this to check if a user is in a game
 bool Gameroom::anyUserInGame() const
 {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    return std::any_of(globalUsers.begin(), globalUsers.end(), [](const auto &entry)
-                       { return entry.second.inGame; });
+    return clients.size() > 0;
 }
 
 // Starts a new game, resetting necessary components and starting the multiplier increase
 void Gameroom::startGame()
 {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    std::cout << "startGame called!" << std::endl;
-    std::cout << "gameInProgress: " << gameInProgress << std::endl;
-    std::cout << "anyUserInGame(): " << anyUserInGame() << std::endl;
 
     if (!gameInProgress && anyUserInGame())
     {
@@ -145,6 +135,8 @@ void Gameroom::startGame()
     }
 }
 
+// THIS TO THE CASHOUT FUNCTION **
+// TODO: When the user clicks the cashout button, this function is called
 void Gameroom::userStops(const std::string &userId)
 {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
@@ -225,6 +217,8 @@ void Gameroom::placeUserBet(const std::string &userId, double betAmount)
 
 // List all users in the gameroom
 void Gameroom::listAllUsers() const {
+    // change to list all users IN THIS GAME ROOM, rather than all users connected to the server
+
     std::lock_guard<std::mutex> lock(usersMutex);
     
     if (globalUsers.empty()) {
@@ -247,10 +241,4 @@ void Gameroom::listAllUsers() const {
 double Gameroom::getCurrentMultiplier() const
 {
     return multiplier;
-}
-
-void Gameroom::removeUser(const std::string &userId)
-{
-    std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    globalUsers.erase(userId);                    // Remove the user from the game
 }

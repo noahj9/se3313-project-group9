@@ -10,9 +10,10 @@ public:
     double balance; // User's current balance
     double betAmount; // Amount bet by the user for the current game
     bool inGame; // Flag to check if the user is currently in a game
+    int socket; // Socket associated with the user
 
     // Constructor
-    User(const std::string& id, double balance);
+    User(const std::string& id, double balance, int socket);
 
     void placeBet(double amount);
     void reset();

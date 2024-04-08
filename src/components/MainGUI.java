@@ -15,7 +15,7 @@ public class MainGUI {
         public void actionPerformed(ActionEvent e) {
             try {
                 // Connect to C++ backend server
-                Socket socket = new Socket("localhost", 8080);
+                Socket socket = new Socket("localhost", 2003);
                 OutputStream outputStream = socket.getOutputStream();
                 
                 // Send request to join room
@@ -36,7 +36,7 @@ public class MainGUI {
             public void actionPerformed(ActionEvent e) {
                 try {
                     // Connect to C++ backend server
-                    Socket socket = new Socket("localhost", 8080);
+                    Socket socket = new Socket("localhost", 2003);
                     OutputStream outputStream = socket.getOutputStream();
                     
                     // Send request to join room
