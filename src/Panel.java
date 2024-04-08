@@ -20,14 +20,13 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public JPanel mainPanel;
 
     public String userId;
-    public String roomNumber;
+    public String roomNumber="";
 
     public Panel() {
         setLayout(new BorderLayout());
         // countdownPanel = new CountdownPanel();
         // countdownPanel.addCountdownListener(this);
         // add(countdownPanel, BorderLayout.NORTH);
-        System.out.println(roomNumber.length());
         if(roomNumber.length()==0){
             leftPanel = new LeftPanel();
             rightPanel = new RightPanel();
@@ -63,6 +62,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Leave Room");
+                    leaveRoom();
                 }
             });
             add(newGameButton, leftConstraints);
@@ -147,6 +147,20 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         gRoomCentralPanel = new GameRoomCenterPanel();
         mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
         mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        add(mainPanel, BorderLayout.SOUTH);
+        revalidate();
+        repaint();
+    }
+    public void leaveRoom(){
+        mainPanel.remove(gRoomCentralPanel);
+        mainPanel.remove(gRoomLeftPanel);
+        leftPanel = new LeftPanel();
+        rightPanel = new RightPanel();
+        centerPanel = new CenterPanel();
+
+        mainPanel.add(leftPanel, BorderLayout.WEST);
+        mainPanel.add(rightPanel, BorderLayout.EAST);
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
         add(mainPanel, BorderLayout.SOUTH);
         revalidate();
         repaint();
