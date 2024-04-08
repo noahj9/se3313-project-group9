@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.Timer;
 
 public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
-    private CountdownPanel countdownPanel;
-    private Multiplier multiplier;
-    private Player player;
-    private Explosion explosion;
+    public CountdownPanel countdownPanel;
+    public Multiplier multiplier;
+    public Player player;
+    public Explosion explosion;
     public LeftPanel leftPanel;
     public RightPanel rightPanel;
     public CenterPanel centerPanel;
@@ -344,32 +344,32 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         repaint();
     }
     public void countdownFinished() {
-        remove(countdownPanel);
+        mainPanel.remove(countdownPanel);
         multiplier = new Multiplier();
         multiplier.addMultiplierListener(this);
-        add(multiplier, BorderLayout.NORTH);
+        mainPanel.add(multiplier, BorderLayout.NORTH);
         player = new Player();
-        add(player, BorderLayout.CENTER);
+        mainPanel.add(player, BorderLayout.CENTER);
         revalidate();
         repaint();
     }
 
     public void multiplierStopped() {
         Timer timer2 = new Timer(100, e -> {
-            remove(player);
+            mainPanel.remove(player);
             explosion = new Explosion();
-            add(explosion, BorderLayout.CENTER);
+            mainPanel.add(explosion, BorderLayout.CENTER);
             revalidate();
             repaint();
         });
         timer2.setRepeats(false);
         timer2.start();
         Timer timer = new Timer(10000, e -> {
-            remove(explosion);
-            remove(multiplier);
+            mainPanel.remove(explosion);
+            mainPanel.remove(multiplier);
             countdownPanel = new CountdownPanel();
             countdownPanel.addCountdownListener(this);
-            add(countdownPanel, BorderLayout.NORTH);
+            mainPanel.add(countdownPanel, BorderLayout.NORTH);
             revalidate();
             repaint();
         });
