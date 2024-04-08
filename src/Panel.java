@@ -200,7 +200,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
 
-                        String request = "CASHOUT";
+                        String request = "CASHOUT " + roomNumber + " " + userId;
                         outputStream.write(request.getBytes());
 
                         socket.close(); // Close connection
