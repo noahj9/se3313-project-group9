@@ -5,6 +5,8 @@ import components.*;
 import java.io.*;
 import java.net.*;
 import java.awt.event.*;
+import java.util.*;
+import java.awt.List;
 
 public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
     private CountdownPanel countdownPanel;
@@ -27,6 +29,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         // countdownPanel = new CountdownPanel();
         // countdownPanel.addCountdownListener(this);
         // add(countdownPanel, BorderLayout.NORTH);
+      
         if(roomNumber.length()==0){
             leftPanel = new LeftPanel();
             rightPanel = new RightPanel();
@@ -243,11 +246,35 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             refreshButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // TODO: Send "GET_ACTIVE_ROOMS" message to the server
-                    // Refresh rooms :)
                     System.out.println("Refresh Room List button pressed");
+                    try {
+                        Socket socket = new Socket("127.0.0.1", 2003);
+                        OutputStream outputStream = socket.getOutputStream();
+
+                        String request = "GET_ACTIVE_ROOMS";
+                        outputStream.write(request.getBytes());
+            
+                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        ArrayList<String> roomList = new ArrayList<>();
+                        String inputLine;
+                        // inputLine = Room Name: Room_0, Players: 1Room Name: Room_1, Players: 1Room Name: Room_2, Players: 1
+                        while ((inputLine = in.readLine()) != null && !inputLine.trim().isEmpty()) {
+                            roomList.add(inputLine); // Add each line (room) to the list
+                            System.out.println(inputLine);
+                        }
+                        socket.close(); // Close connection
+
+                        // Now, roomList contains all the rooms, and you can log it
+                        System.out.println("Received list of active rooms:");
+                        for (String room : roomList) {
+                            System.out.println(room);
+                        }
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             });
+            
             leftConstraints.gridy = 1;
             add(refreshButton, leftConstraints);
         }
