@@ -29,18 +29,18 @@ int numberOfUsers = 0;
 // Mutex for synchronizing access to activeGameRooms
 std::mutex gameRoomsMutex;
 
-std::string initializeUser()
-{
-    // Create a new user object
-    // Initialize balance to $10, bet amount to 0, and inGame flag to false --> Call the damn constructor
-    // ** User id = numberOfUsers --> make it a string **
-    // numberOfUsers += 1
-    // Send user id back to client
+// std::string initializeUser()
+// {
+//     // Create a new user object
+//     // Initialize balance to $10, bet amount to 0, and inGame flag to false --> Call the damn constructor
+//     // ** User id = numberOfUsers --> make it a string **
+//     // numberOfUsers += 1
+//     // Send user id back to client
 
-    std::lock_guard<std::mutex> lock(usersMutex);
+//     std::lock_guard<std::mutex> lock(usersMutex);
 
-    // return user's id
-}
+//     // return user's id
+// }
 
 std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of active rooms with mutex protect
 // then we need to parse this into string list
@@ -51,7 +51,7 @@ std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of a
     for (const auto &room : activeGameRooms)
     {
         // Assume Gameroom has a method to retrieve its name and number of players
-        roomList += "Room Name: " + room.name + ", Players: " + std::to_string(room.clients.size()) + "";
+        roomList += room.name + "\n";
     }
     std::cout << "Active rooms response: " << roomList << std::endl;
     return roomList;
@@ -71,7 +71,7 @@ void joinGameRoom(std::string roomName, std::string userId) // TODO James
         if (room.name == roomName)
         {
             // TODO: Change this to be the USER ID
-            room.acceptClient(userId);
+            room.acceptClient(numberOfUsers++);
             return;
         }
     }
