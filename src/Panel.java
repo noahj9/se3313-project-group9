@@ -455,12 +455,15 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             
                         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         ArrayList<String> roomList = new ArrayList<>();
-                        String inputLine;
-                        // inputLine = Room Name: Room_0, Players: 1Room Name: Room_1, Players: 1Room Name: Room_2, Players: 1
-                        while ((inputLine = in.readLine()) != null && !inputLine.trim().isEmpty()) {
-                            roomList.add(inputLine); // Add each line (room) to the list
-                            System.out.println(inputLine);
+                        
+                        String response = reader.readLine();
+                        String[] roomNames = response.split(" "); // Split the response string by spaces
+
+                        // Add each room name to the list
+                        for (String roomName : roomNames) {
+                            roomsList.add(roomName);
                         }
+
                         socket.close(); // Close connection
 
                         if (roomList.isEmpty()) {

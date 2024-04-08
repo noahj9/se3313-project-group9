@@ -48,7 +48,7 @@ std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of a
     for (const auto &room : activeGameRooms)
     {
         // Assume Gameroom has a method to retrieve its name and number of players
-        roomList += room.name + "\n";
+        roomList += room.name + " ";
     }
     std::cout << "Active rooms response: " << roomList << std::endl;
     return roomList;
