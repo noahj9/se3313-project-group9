@@ -28,9 +28,11 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
 
     public String userId = "";
     public String roomNumber = "";
-
     public int selectedRoomIndex = 0;
     public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
+    public String roomNumber="";
+    public String SERVER_ADDRESS = "127.0.0.1";
+    public int SERVER_PORT = 2003;
 
     public int betAmount = 0;
     public int cashAmount = 100;
@@ -540,13 +542,43 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     // cash out
     // leave room
 
-    public static void initializeUser() {
+    public static void initializeUser() { //TODO: NOAH
         // Logic for creating user --> join the server through a socket connection
         // Should receive a "userId" (string) from the server. Store this in a global variable
+        try {
+            // connect to the server
+            Socket socket = new Socket(serverAddress, serverPort);
+
+            // input stream to get response
+            InputStream inputStream = socket.getInputStream();
+
+            // output stream to send message
+            OutputStream outputStream = socket.getOutputStream();
+
+            // Send the "INITIALIZE_USER" message to the server
+            String initializeMessage = "INITIALIZE_USER";
+            outputStream.write(initializeMessage.getBytes());
+
+             // Read the message from the server
+            byte[] buffer = new byte[1024];
+            int bytesRead = inputStream.read(buffer);
+            if (bytesRead != -1) {
+                String user_id = new String(buffer, 0, bytesRead);
+                userId = user_id; // set the global user id
+                System.out.println("Received user ID from server: " + message);
+            } else {
+                System.out.println("No data received from server");
+            }
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static void main(String[] args) {
         // User handling to add user -> create user
+        initializeUser();
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Loop of full animation");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
