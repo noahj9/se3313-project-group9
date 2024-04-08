@@ -5,6 +5,7 @@ import components.*;
 import java.io.*;
 import java.net.*;
 import java.awt.event.*;
+import java.util.concurrent.TimeUnit;
 
 public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
     private CountdownPanel countdownPanel;
@@ -15,14 +16,17 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     private RightPanel rightPanel;
     private CenterPanel centerPanel;
 
-    public String userId;
+    public String userId = "1";
     public String roomNumber;
 
+    public int selectedRoomIndex = 0;
+    public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
+
     public Panel() {
-        setLayout(new BorderLayout());
-        countdownPanel = new CountdownPanel();
-        countdownPanel.addCountdownListener(this);
-        add(countdownPanel, BorderLayout.NORTH);
+        // setLayout(new BorderLayout());
+        // countdownPanel = new CountdownPanel();
+        // countdownPanel.addCountdownListener(this);
+        // add(countdownPanel, BorderLayout.NORTH);
 
         leftPanel = new LeftPanel();
         rightPanel = new RightPanel();
@@ -70,6 +74,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         timer.start();
     }
 
+    // Display the current selected room
+    JLabel selectedRoomLabel = new JLabel(roomListStrings[selectedRoomIndex]);
+
     private class LeftPanel extends JPanel {
         public LeftPanel() {
             setLayout(new GridBagLayout());
@@ -85,24 +92,14 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("New Game button pressed");
                     try {
-                        // open socket connection
-                        // TODO: change localhost to the AWS server IP address
                         Socket socket = new Socket("127.0.0.1", 2003);
-
-                        // create output stream
                         OutputStream outputStream = socket.getOutputStream();
-                        PrintWriter out = new PrintWriter(outputStream, true);
 
-                        // send the message
-                        out.println("CREATE_ROOM");
-
-                        // close the connection
-                        // TODO: @noah make a GLOBAL socket for the client, so we can always use the same socket
+                        // TODO: This will have to be an exact room name based on what's selected
+                        String request = "CREATE_ROOM";
+                        outputStream.write(request.getBytes());
                         socket.close();
-
-                        System.out.println("New Game button pressed and CREATE_ROOM message sent");
                     } catch (IOException ex) {
-                        // handle exception if error with socket
                         ex.printStackTrace();
                     }
                 }
@@ -116,6 +113,17 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     // TODO: Send "GET_ACTIVE_ROOMS" message to the server
                     // Refresh rooms :)
                     System.out.println("Refresh Room List button pressed");
+                    try {
+                        Socket socket = new Socket("127.0.0.1", 2003);
+                        OutputStream outputStream = socket.getOutputStream();
+
+                        // TODO: This will have to be an exact room name based on what's selected
+                        String request = "GET_ACTIVE_ROOMS";
+                        outputStream.write(request.getBytes());
+                        socket.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             });
             leftConstraints.gridy = 1;
@@ -137,7 +145,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             upButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("Up button pressed");
+                    selectedRoomIndex = (selectedRoomIndex - 1 + roomListStrings.length) % roomListStrings.length;
+                    selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
                 }
             });
             add(upButton, rightConstraints);
@@ -146,7 +155,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             downButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("Down button pressed");
+                    selectedRoomIndex = (selectedRoomIndex + 1) % roomListStrings.length;
+                    selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
                 }
             });
             rightConstraints.gridy = 1;
@@ -155,6 +165,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     }
 
     private class CenterPanel extends JPanel {
+    
         public CenterPanel() {
             setLayout(new GridBagLayout());
             GridBagConstraints centerConstraints = new GridBagConstraints();
@@ -162,19 +173,35 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             centerConstraints.gridy = 0;
             centerConstraints.anchor = GridBagConstraints.CENTER;
             centerConstraints.insets = new Insets(5, 5, 5, 5);
-
+    
+            add(selectedRoomLabel, centerConstraints);
+    
+            // Constraints for the room label
+            GridBagConstraints roomLabelConstraints = new GridBagConstraints();
+            roomLabelConstraints.gridx = 0;
+            roomLabelConstraints.gridy = 0;
+            roomLabelConstraints.anchor = GridBagConstraints.CENTER;
+            roomLabelConstraints.insets = new Insets(5, 5, 5, 5);
+            add(selectedRoomLabel, roomLabelConstraints);
+    
+            // Constraints for the select room button
+            GridBagConstraints selectButtonConstraints = new GridBagConstraints();
+            selectButtonConstraints.gridx = 0;
+            selectButtonConstraints.gridy = 1;
+            selectButtonConstraints.anchor = GridBagConstraints.CENTER;
+            selectButtonConstraints.insets = new Insets(5, 5, 5, 5);
             JButton selectRoomButton = new JButton("Select Room");
             selectRoomButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // TODO: @noah Same socket issue as above
-
+                    // Send the selected room to the server
                     try {
                         Socket socket = new Socket("127.0.0.1", 2003);
                         OutputStream outputStream = socket.getOutputStream();
-
-                        // TODO: This will have to be an exact room name based on what's selected
-                        String request = "JOIN_ROOM Room_0 userID";
+    
+                        // Send the selected room
+                        String request = "JOIN_ROOM " + roomListStrings[selectedRoomIndex] + " " + userId;
+                        
                         outputStream.write(request.getBytes());
                         socket.close();
                     } catch (IOException ex) {
@@ -182,9 +209,10 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     }
                 }
             });
-            add(selectRoomButton, centerConstraints);
+            add(selectRoomButton, selectButtonConstraints);
         }
     }
+    
     // bet - up and down arrow with bet balance
     // cash out
     // leave room
