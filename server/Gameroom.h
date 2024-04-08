@@ -21,7 +21,7 @@ public:
     std::string name;
 
     // clients = users --> string holding the user id
-    std::vector<std::string> clients;
+    std::vector<int> clients;
 
     // Default constructor
     Gameroom();
@@ -42,7 +42,7 @@ public:
     Gameroom &operator=(const Gameroom &) = delete;
 
     // Method declarations
-    void acceptClient(std::string userId);
+    void acceptClient(int clientSocket);
     void removeClient(std::string userId);
     bool anyUserInGame() const;
     void startGame();

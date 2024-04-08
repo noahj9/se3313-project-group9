@@ -5,6 +5,8 @@ import components.*;
 import java.io.*;
 import java.net.*;
 import java.awt.event.*;
+import java.util.*;
+import java.awt.List;
 import java.util.concurrent.TimeUnit;
 
 public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
@@ -12,9 +14,13 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     private Multiplier multiplier;
     private Player player;
     private Explosion explosion;
-    private LeftPanel leftPanel;
-    private RightPanel rightPanel;
-    private CenterPanel centerPanel;
+    public LeftPanel leftPanel;
+    public RightPanel rightPanel;
+    public CenterPanel centerPanel;
+    public GameRoomCenterPanel gRoomCentralPanel;
+    public GameRoomLeftPanel gRoomLeftPanel;
+    public CashoutCenterPanel cashoutCenterPanel;
+    public JPanel mainPanel;
 
     public String userId = "1";
     public String roomNumber;
@@ -23,23 +29,150 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
 
     public Panel() {
-        // setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
         // countdownPanel = new CountdownPanel();
         // countdownPanel.addCountdownListener(this);
         // add(countdownPanel, BorderLayout.NORTH);
+      
+        if(roomNumber.length()==0){
+            leftPanel = new LeftPanel();
+            rightPanel = new RightPanel();
+            centerPanel = new CenterPanel();
+          
+            mainPanel = new JPanel(new BorderLayout());
+            mainPanel.add(leftPanel, BorderLayout.WEST);
+            mainPanel.add(rightPanel, BorderLayout.EAST);
+            mainPanel.add(centerPanel, BorderLayout.CENTER);
+            add(mainPanel, BorderLayout.SOUTH);
+        }else{
+            gRoomLeftPanel = new GameRoomLeftPanel();
+            gRoomCentralPanel = new GameRoomCenterPanel();
 
+            mainPanel = new JPanel(new BorderLayout());
+            mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
+            mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+            add(mainPanel, BorderLayout.SOUTH);
+        }
+        
+
+    }
+
+    private class GameRoomLeftPanel extends JPanel {
+        public GameRoomLeftPanel() {
+            setLayout(new GridBagLayout());
+            GridBagConstraints leftConstraints = new GridBagConstraints();
+            leftConstraints.gridx = 0;
+            leftConstraints.gridy = 0;
+            leftConstraints.anchor = GridBagConstraints.LINE_START;
+            JButton newGameButton = new JButton("Leave Room");
+            newGameButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Leave Room");
+                    leaveRoom();
+                }
+            });
+            add(newGameButton, leftConstraints);
+        }
+    }
+    
+    private class GameRoomCenterPanel extends JPanel {
+        public GameRoomCenterPanel() {
+            setLayout(new GridBagLayout());
+            GridBagConstraints centerConstraints = new GridBagConstraints();
+            centerConstraints.gridx = 0;
+            centerConstraints.gridy = 0;
+            centerConstraints.anchor = GridBagConstraints.CENTER;
+            JButton upButton = new JButton("^");
+            upButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Up button pressed");
+                }
+            });
+            add(upButton, centerConstraints);
+    
+            
+            JButton placeBetButton = new JButton("Bet");
+            placeBetButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Bet Placed");
+                    removeBetButtons();
+
+                }
+            });
+            centerConstraints.gridy = 1;
+            add(placeBetButton, centerConstraints);
+
+            JButton downButton = new JButton("v");
+            downButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Down button pressed");
+                }
+            });
+            centerConstraints.gridy = 2;
+            add(downButton, centerConstraints);
+        }
+    }
+
+    private class CashoutCenterPanel extends JPanel {
+        public CashoutCenterPanel() {
+            setLayout(new GridBagLayout());
+            GridBagConstraints centerConstraints = new GridBagConstraints();
+            centerConstraints.gridx = 0;
+            centerConstraints.gridy = 0;
+            centerConstraints.anchor = GridBagConstraints.CENTER;
+            centerConstraints.insets = new Insets(5, 5, 5, 5);
+    
+            JButton selectRoomButton = new JButton("CashOut");
+            selectRoomButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Cashout");
+                    removeCashOut();
+                }
+            });
+            add(selectRoomButton, centerConstraints);
+        }
+    }
+    public void removeBetButtons(){
+        System.out.println("Remove Bet called");
+        mainPanel.remove(gRoomCentralPanel);
+        mainPanel.remove(gRoomLeftPanel);
+        cashoutCenterPanel = new CashoutCenterPanel();
+        mainPanel.add(cashoutCenterPanel, BorderLayout.CENTER);
+        revalidate();
+        repaint();
+
+    }
+    public void removeCashOut(){
+        System.out.println("Cashout called");
+        mainPanel.remove(cashoutCenterPanel);
+        gRoomLeftPanel = new GameRoomLeftPanel();
+        gRoomCentralPanel = new GameRoomCenterPanel();
+        mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
+        mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        add(mainPanel, BorderLayout.SOUTH);
+        revalidate();
+        repaint();
+    }
+    public void leaveRoom(){
+        mainPanel.remove(gRoomCentralPanel);
+        mainPanel.remove(gRoomLeftPanel);
         leftPanel = new LeftPanel();
         rightPanel = new RightPanel();
         centerPanel = new CenterPanel();
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
         add(mainPanel, BorderLayout.SOUTH);
+        revalidate();
+        repaint();
 
     }
-
     public void countdownFinished() {
         remove(countdownPanel);
         multiplier = new Multiplier();
@@ -110,22 +243,35 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             refreshButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // TODO: Send "GET_ACTIVE_ROOMS" message to the server
-                    // Refresh rooms :)
                     System.out.println("Refresh Room List button pressed");
                     try {
                         Socket socket = new Socket("127.0.0.1", 2003);
                         OutputStream outputStream = socket.getOutputStream();
 
-                        // TODO: This will have to be an exact room name based on what's selected
                         String request = "GET_ACTIVE_ROOMS";
                         outputStream.write(request.getBytes());
-                        socket.close();
+            
+                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        ArrayList<String> roomList = new ArrayList<>();
+                        String inputLine;
+                        // inputLine = Room Name: Room_0, Players: 1Room Name: Room_1, Players: 1Room Name: Room_2, Players: 1
+                        while ((inputLine = in.readLine()) != null && !inputLine.trim().isEmpty()) {
+                            roomList.add(inputLine); // Add each line (room) to the list
+                            System.out.println(inputLine);
+                        }
+                        socket.close(); // Close connection
+
+                        // Now, roomList contains all the rooms, and you can log it
+                        System.out.println("Received list of active rooms:");
+                        for (String room : roomList) {
+                            System.out.println(room);
+                        }
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
                 }
             });
+            
             leftConstraints.gridy = 1;
             add(refreshButton, leftConstraints);
         }
