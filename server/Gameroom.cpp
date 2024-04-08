@@ -56,14 +56,10 @@ void Gameroom::acceptClient(std::string userId)
     // add userID to list of users in this game room
     clients.push_back(userId);
 
-    // TODO: Get the client's socket from the "globalUsers"
-    int clientSocket = globalUsers[userId].socket;
-
-    // send a socket connection msg to client saying they joined properly
-    std::string message = "You have successfully joined the game room: " + name + "\n";
-    if (send(clientSocket, message.c_str(), message.length(), 0) == -1)
+    std::cout << "Clients in the game room: " << name << std::endl;
+    for (const auto &client : clients)
     {
-        std::cerr << "Error sending join message to client\n";
+        std::cout << client << std::endl;
     }
 }
 

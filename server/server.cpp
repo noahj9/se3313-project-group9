@@ -69,17 +69,14 @@ void joinGameRoom(std::string roomName, std::string userId)
         {
             // Assuming you have a function to send a message to a client by userId
             room.acceptClient(userId);
-            std::string joinResponse = "You have successfully joined " + roomName;
-            send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
+            std::cout << "Client joined room: " << roomName << std::endl;
+
+            // std::string joinResponse = "You have successfully joined " + roomName;
+            // send(clientSocket, joinResponse.c_str(), joinResponse.size(), 0);
             return;
         }
-        else
-        {
-            std::cerr << "Desired room not found for joinGameRoom function. Room name given: " << roomName << " \n";
-            std::string joinResponse = "Room not found";
-            send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
-        }
     }
+    std::cerr << "Desired room not found for joinGameRoom function. Room name given: " << roomName << ". \n";
 }
 
 void cashout(std::string roomName, std::string userId, std::string multiplier)
@@ -186,7 +183,8 @@ void handleClient(std::string userId)
             size_t firstSpacePos = request.find(" ", pos + 1);
             size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
 
-            if (pos != std::string::npos && firstSpacePos != std::string::npos && secondSpacePos != std::string::npos)
+            std::cout << "Joining room request: " << request << std::endl;
+            if (pos != std::string::npos && firstSpacePos != std::string::npos)
             {
                 std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
                 std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
@@ -203,7 +201,7 @@ void handleClient(std::string userId)
             size_t firstSpacePos = request.find(" ", pos + 1);
             size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
 
-            if (pos != std::string::npos && firstSpacePos != std::string::npos && secondSpacePos != std::string::npos)
+            if (pos != std::string::npos && firstSpacePos != std::string::npos)
             {
                 std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
                 std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
@@ -218,7 +216,7 @@ void handleClient(std::string userId)
             size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
             size_t thirdSpacePos = request.find(" ", secondSpacePos + 1);
 
-            if (pos != std::string::npos && firstSpacePos != std::string::npos && secondSpacePos != std::string::npos)
+            if (pos != std::string::npos && firstSpacePos != std::string::npos)
             {
                 std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
                 std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
