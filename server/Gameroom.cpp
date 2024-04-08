@@ -218,6 +218,8 @@ void Gameroom::endGame()
              ("BALANCE " + std::to_string(globalUsers[userId].balance)).size(), 0);
     }
     std::cout << "Game ended." << std::endl;
+    sleep(10);   // Sleep for 10 seconds to allow clients to see the end of the game
+    startGame(); // Start a new game after the previous one has ended
 }
 
 // Returns whether a game is currently in progress
@@ -232,32 +234,36 @@ void Gameroom::placeUserBet(const std::string &userId, double betAmount)
     std::lock_guard<std::mutex> lock(usersMutex); // Ensure thread safety when accessing globalUsers
 
     auto it = globalUsers.find(userId);
-    if (it == globalUsers.end()) {
+    if (it == globalUsers.end())
+    {
         std::cout << "User " << userId << " not found." << std::endl;
         return;
     }
 
-    if (gameInProgress) {
+    if (gameInProgress)
+    {
         std::cout << "Cannot place bet, the game is currently in progress." << std::endl;
         return;
     }
 
     // Check if the user has enough balance and if the bet amount is positive
-    if (betAmount <= 0) {
+    if (betAmount <= 0)
+    {
         std::cout << "User " << userId << " cannot place a bet of $" << betAmount << ". Bet must be greater than $0." << std::endl;
         return;
     }
 
-    if (globalUsers[userId].balance < betAmount) {
+    if (globalUsers[userId].balance < betAmount)
+    {
         std::cout << "User " << userId << " does not have enough balance to place a bet of $" << betAmount << "." << std::endl;
         std::cout << "Current balance: $" << globalUsers[userId].balance << std::endl;
         return;
     }
 
     // At this point, all checks have passed, and the user can place a bet
-    globalUsers[userId].balance -= betAmount; // Assuming you want to deduct the bet amount from the user's balance
+    globalUsers[userId].balance -= betAmount;   // Assuming you want to deduct the bet amount from the user's balance
     globalUsers[userId].betAmount += betAmount; // Track the total bet amount for this game
-    globalUsers[userId].inGame = true; // Mark the user as participating in the game
+    globalUsers[userId].inGame = true;          // Mark the user as participating in the game
     std::cout << "User " << userId << " placed a bet of $" << betAmount << ". New balance: $" << globalUsers[userId].balance << std::endl;
 }
 

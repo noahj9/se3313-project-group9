@@ -147,6 +147,17 @@ void createGameRoom(std::string userId)
     activeGameRooms.emplace_back(roomName);
 
     std::cout << "New room created " << roomName << std::endl;
+
+    // start the game in the new gameroom
+
+    for (auto &room : activeGameRooms)
+    {
+        if (room.name == roomName)
+        {
+            room.startGame();
+            break;
+        }
+    }
 }
 
 void handleClient(std::string userId)
