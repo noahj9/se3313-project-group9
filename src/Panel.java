@@ -1,5 +1,7 @@
 
 import javax.swing.*;
+import javax.swing.Timer;
+
 import java.awt.*;
 import components.*;
 import java.io.*;
@@ -19,15 +21,21 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public CenterPanel centerPanel;
     public GameRoomCenterPanel gRoomCentralPanel;
     public GameRoomLeftPanel gRoomLeftPanel;
+    public GameRoomRightPanel gRoomRightPanel;
     public CashoutCenterPanel cashoutCenterPanel;
+    public RoomsListCenterPanel roomListPanel;
     public JPanel mainPanel;
 
-    public String userId = "1";
+    public String userId = "";
+    public String roomNumber = "";
     public int selectedRoomIndex = 0;
     public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
     public String roomNumber="";
     public String SERVER_ADDRESS = "127.0.0.1";
     public int SERVER_PORT = 2003;
+
+    public int betAmount = 0;
+    public int cashAmount = 100;
 
     public Panel() {
         setLayout(new BorderLayout());
@@ -39,23 +47,28 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             leftPanel = new LeftPanel();
             rightPanel = new RightPanel();
             centerPanel = new CenterPanel();
+            roomListPanel = new RoomsListCenterPanel();
           
             mainPanel = new JPanel(new BorderLayout());
+            mainPanel.add(roomListPanel, BorderLayout.NORTH);
             mainPanel.add(leftPanel, BorderLayout.WEST);
             mainPanel.add(rightPanel, BorderLayout.EAST);
             mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+            roomListPanel.highlightRoom(selectedRoomIndex);
+
             add(mainPanel, BorderLayout.SOUTH);
         }else{
             gRoomLeftPanel = new GameRoomLeftPanel();
             gRoomCentralPanel = new GameRoomCenterPanel();
+            gRoomRightPanel = new GameRoomRightPanel();
 
             mainPanel = new JPanel(new BorderLayout());
             mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
             mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+            mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
             add(mainPanel, BorderLayout.SOUTH);
         }
-        
-
     }
 
     private class GameRoomLeftPanel extends JPanel {
@@ -71,6 +84,18 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Leave Room");
                     leaveRoom();
+
+                    // try {
+                    //     Socket socket = new Socket("127.0.0.1", 2003);
+                    //     OutputStream outputStream = socket.getOutputStream();
+
+                    //     // TODO: This will have to be an exact room name based on what's selected
+                    //     String request = "LEAVE_ROOM";
+                    //     outputStream.write(request.getBytes());
+                    //     socket.close();
+                    // } catch (IOException ex) {
+                    //     ex.printStackTrace();
+                    // }
                 }
             });
             add(newGameButton, leftConstraints);
@@ -84,37 +109,75 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             centerConstraints.gridx = 0;
             centerConstraints.gridy = 0;
             centerConstraints.anchor = GridBagConstraints.CENTER;
+
+            // Up button
             JButton upButton = new JButton("^");
             upButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("Up button pressed");
+                    // Increase bet amount
+                    betAmount += 10;
+                    updateBetAmount(betAmount);
                 }
             });
             add(upButton, centerConstraints);
-    
-            
+
+            // Bet button
             JButton placeBetButton = new JButton("Bet");
             placeBetButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    // Place bet
                     System.out.println("Bet Placed");
                     removeBetButtons();
-
                 }
             });
             centerConstraints.gridy = 1;
             add(placeBetButton, centerConstraints);
 
+            // Down button
             JButton downButton = new JButton("v");
             downButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("Down button pressed");
+                    // Decrease bet amount
+                    if (betAmount >= 10) {
+                        betAmount -= 10;
+                        updateBetAmount(betAmount);
+                    }
                 }
             });
             centerConstraints.gridy = 2;
             add(downButton, centerConstraints);
+        }
+    }
+
+    private class GameRoomRightPanel extends JPanel {
+        private JLabel cashTextLabel;
+        private JLabel cashLabel;
+        private JLabel betTextLabel;
+        private JLabel betLabel;
+    
+        public GameRoomRightPanel() {
+            setLayout(new GridLayout(2, 1));
+    
+            // Cash label
+            cashTextLabel = new JLabel("Cash Amount:");
+            cashLabel = new JLabel("$" + cashAmount);
+            add(cashTextLabel);
+            add(cashLabel);
+    
+            // Bet label
+            betTextLabel = new JLabel("Bet Amount:");
+            betLabel = new JLabel("$" + betAmount);
+            add(betTextLabel);
+            add(betLabel);
+        }
+    
+        // Method to update the bet label
+        public void updateBetLabel(int newBetAmount) {
+            betAmount = newBetAmount;
+            betLabel.setText("$" + betAmount);
         }
     }
 
@@ -133,13 +196,64 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Cashout");
                     removeCashOut();
+
+                    // try {
+                    //     Socket socket = new Socket("127.0.0.1", 2003);
+                    //     OutputStream outputStream = socket.getOutputStream();
+
+                    //     // TODO: This will have to be an exact room name based on what's selected
+                    //     String request = "LEAVE_ROOM";
+                    //     outputStream.write(request.getBytes());
+                    //     socket.close();
+                    // } catch (IOException ex) {
+                    //     ex.printStackTrace();
+                    // }
                 }
             });
             add(selectRoomButton, centerConstraints);
         }
     }
+
+    private class RoomsListCenterPanel extends JPanel {
+        private JLabel[] roomLabels;
+    
+        public RoomsListCenterPanel() {
+            setLayout(new GridLayout(roomListStrings.length, 1));
+            roomLabels = new JLabel[roomListStrings.length];
+    
+            for (int i = 0; i < roomListStrings.length; i++) {
+                roomLabels[i] = new JLabel(roomListStrings[i]);
+                roomLabels[i].setHorizontalAlignment(SwingConstants.CENTER);
+                add(roomLabels[i]);
+            }
+        }
+    
+        // Method to highlight the selected room
+        public void highlightRoom(int selectedIndex) {
+            for (int i = 0; i < roomLabels.length; i++) {
+                if (i == selectedIndex) {
+                    roomLabels[i].setBackground(Color.YELLOW); // Highlight color
+                    roomLabels[i].setOpaque(true);
+                } else {
+                    roomLabels[i].setBackground(null); // Reset color
+                }
+            }
+        }
+    }  
+
+    public void updateBetAmount(int newBetAmount) {
+        if (newBetAmount >= 0) {
+            betAmount = newBetAmount;
+            gRoomRightPanel.updateBetLabel(betAmount);
+        } else {
+            // Display a message or handle the situation when the bet amount goes below 0
+            System.out.println("Invalid bet amount");
+        }
+    }    
+
     public void removeBetButtons(){
         System.out.println("Remove Bet called");
+        mainPanel.remove(gRoomRightPanel);
         mainPanel.remove(gRoomCentralPanel);
         mainPanel.remove(gRoomLeftPanel);
         cashoutCenterPanel = new CashoutCenterPanel();
@@ -153,8 +267,12 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         mainPanel.remove(cashoutCenterPanel);
         gRoomLeftPanel = new GameRoomLeftPanel();
         gRoomCentralPanel = new GameRoomCenterPanel();
+        gRoomRightPanel = new GameRoomRightPanel();
+        
         mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
         mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
+
         add(mainPanel, BorderLayout.SOUTH);
         revalidate();
         repaint();
@@ -162,17 +280,38 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public void leaveRoom(){
         mainPanel.remove(gRoomCentralPanel);
         mainPanel.remove(gRoomLeftPanel);
+        mainPanel.remove(gRoomRightPanel);
         leftPanel = new LeftPanel();
         rightPanel = new RightPanel();
         centerPanel = new CenterPanel();
+        roomListPanel = new RoomsListCenterPanel();
 
+        mainPanel.add(roomListPanel, BorderLayout.NORTH);
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+        roomListPanel.highlightRoom(selectedRoomIndex);
+
         add(mainPanel, BorderLayout.SOUTH);
         revalidate();
         repaint();
 
+    }
+    public void getGameRoomPanel(){
+        mainPanel.remove(leftPanel);
+        mainPanel.remove(rightPanel);
+        mainPanel.remove(centerPanel);
+        mainPanel.remove(roomListPanel);
+        gRoomLeftPanel = new GameRoomLeftPanel();
+        gRoomCentralPanel = new GameRoomCenterPanel();
+        gRoomRightPanel = new GameRoomRightPanel();
+        mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
+        mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
+        add(mainPanel, BorderLayout.SOUTH);
+        revalidate();
+        repaint();
     }
     public void countdownFinished() {
         remove(countdownPanel);
@@ -210,6 +349,38 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
 
     // Display the current selected room
     JLabel selectedRoomLabel = new JLabel(roomListStrings[selectedRoomIndex]);
+
+    public class RoomListPanel extends JPanel {
+        private String[] roomListStrings;
+
+        public RoomListPanel(String[] roomListStrings) {
+            this.roomListStrings = roomListStrings;
+            setupUI();
+        }
+
+        private void setupUI() {
+            setLayout(new GridLayout(roomListStrings.length + 1, 1));
+
+            // Add labels for each room in the room list
+            for (String room : roomListStrings) {
+                JLabel roomLabel = new JLabel(room);
+                roomLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                add(roomLabel);
+            }
+
+            // Add a button for room selection
+            JButton selectRoomButton = new JButton("Select Room");
+            selectRoomButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Handle room selection here
+                    System.out.println("Selected room: " + roomListStrings[selectedRoomIndex]);
+                }
+            });
+            add(selectRoomButton);
+        }
+    }
+
 
     private class LeftPanel extends JPanel {
         public LeftPanel() {
@@ -294,6 +465,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     selectedRoomIndex = (selectedRoomIndex - 1 + roomListStrings.length) % roomListStrings.length;
                     selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
+                    roomListPanel.highlightRoom(selectedRoomIndex);
                 }
             });
             add(upButton, rightConstraints);
@@ -304,6 +476,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     selectedRoomIndex = (selectedRoomIndex + 1) % roomListStrings.length;
                     selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
+                    roomListPanel.highlightRoom(selectedRoomIndex);
                 }
             });
             rightConstraints.gridy = 1;
@@ -342,18 +515,23 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // Send the selected room to the server
-                    try {
+                    roomNumber = roomListStrings[selectedRoomIndex];
+                    System.out.println("Selected room: " + roomNumber);
+                    getGameRoomPanel();
+                    /*try {
                         Socket socket = new Socket("127.0.0.1", 2003);
                         OutputStream outputStream = socket.getOutputStream();
     
                         // Send the selected room
                         String request = "JOIN_ROOM " + roomListStrings[selectedRoomIndex] + " " + userId;
+
+                        roomNumber = roomListStrings[selectedRoomIndex];
                         
-                        outputStream.write(request.getBytes());
+                        // outputStream.write(request.getBytes());
                         socket.close();
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                    }
+                    }*/
                 }
             });
             add(selectRoomButton, selectButtonConstraints);
