@@ -13,8 +13,8 @@
 class Gameroom
 {
 private:
-    bool gameInProgress;          // Flag to check if a game is currently in progress
-    std::mutex gameMutex;         // Mutex for synchronizing access to game state
+    bool gameInProgress;  // Flag to check if a game is currently in progress
+    std::mutex gameMutex; // Mutex for synchronizing access to game state
 
 public:
     std::string name;

@@ -642,13 +642,13 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 multiplierStopped();
 
 
-            } else if (message.startsWith("UPDATE_BALANCE")) {
+            } else if (message.startsWith("BALANCE")) {
                 // Extract and update balance
                 String[] parts = message.split(" ");
                 if (parts.length > 1) {
                     String balance = parts[1];
                     System.out.println("Balance updated: " + balance);
-                    // Update GUI with new balance here
+                    //TODO (CATRIOOONA) Update GUI with new balance here
                 }
             }
         }

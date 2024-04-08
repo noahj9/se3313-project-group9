@@ -20,6 +20,7 @@ constexpr int PORT = 2003;
 
 // Global variable for active gamerooms
 std::vector<Gameroom> activeGameRooms;
+std::atomic<bool> serverRunning(true);
 int roomCounter = 0;
 std::unordered_map<std::string, User> globalUsers;
 std::mutex usersMutex;
@@ -135,12 +136,14 @@ void leaveRoom(std::string roomName, std::string userId) // TODO James
     std::cerr << "Desired room not found for leaveRoom function\n";
 }
 
-void gameRoomThread(Gameroom& room) {
+void gameRoomThread(Gameroom &room)
+{
     // Run the game room operations
     room.gameCaller();
 }
 
-void createGameRoom(std::string userId) {
+void createGameRoom(std::string userId)
+{
     int clientSocket = globalUsers[userId].socket; // must figure out how to get the socket from this
 
     // Create a new gameroom and add it to the list of active gamerooms
@@ -259,17 +262,33 @@ void handleClient(std::string userId)
 #endif
 }
 
+void acceptClients(int serverSocket)
+{
+
+    sockaddr_in clientAddr;
+    socklen_t clientAddrSize = sizeof(clientAddr);
+
+    while (serverRunning)
+    {
+        int clientSocket = accept(serverSocket, reinterpret_cast<sockaddr *>(&clientAddr), &clientAddrSize);
+        if (clientSocket == -1)
+        {
+            if (!serverRunning)
+            {
+                std::cerr << "Server shutting down." << std::endl;
+                break; // Exit loop if server is stopping
+            }
+            std::cerr << "Error accepting client connection\n";
+            continue;
+        }
+        std::string userId = initializeUser(clientSocket);
+        std::thread clientThread(handleClient, userId);
+        clientThread.detach();
+    }
+}
+
 int main()
 {
-#ifdef _WIN32
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-    {
-        std::cerr << "WSAStartup failed\n";
-        return 1;
-    }
-#endif
-
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
     {
@@ -306,7 +325,7 @@ int main()
 
     std::cout << "Server listening on port: " << PORT << std::endl;
 
-    while (true)
+    /* while (true)
     {
         sockaddr_in clientAddr;
         socklen_t clientAddrSize = sizeof(clientAddr);
@@ -323,7 +342,26 @@ int main()
         std::thread clientThread(handleClient, userId);
 
         clientThread.detach();
+    }  */
+
+    std::thread acceptThread(acceptClients, serverSocket);
+
+    // Main loop waits for the shutdown command
+    char command = '\0';
+    while (command != 'e')
+    {
+        command = std::getchar();
     }
+
+    // Signal server to stop and close the server socket
+    serverRunning = false;
+
+    // Shutdown the listening socket to ensure no new accept calls can be made
+    shutdown(serverSocket, SHUT_RDWR);
+    close(serverSocket); // Will cause accept to return with an error
+
+    // Wait for the accept thread to finish
+    acceptThread.join();
 
 #ifdef _WIN32
     WSACleanup();
