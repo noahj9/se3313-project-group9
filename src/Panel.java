@@ -35,7 +35,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public static int SERVER_PORT = 2003;
 
     public int betAmount = 0;
-    public int cashAmount = 100;
+    public int cashAmount = 10;
 
     public Panel() {
         setLayout(new BorderLayout());
@@ -116,8 +116,10 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // Increase bet amount
-                    betAmount += 10;
-                    updateBetAmount(betAmount);
+                    if (betAmount + 1 <= cashAmount) {
+                        betAmount += 1;
+                        updateBetAmount(betAmount);
+                    }
                 }
             });
             add(upButton, centerConstraints);
@@ -141,8 +143,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // Decrease bet amount
-                    if (betAmount >= 10) {
-                        betAmount -= 10;
+                    if (betAmount > 1) {
+                        betAmount -= 1;
                         updateBetAmount(betAmount);
                     }
                 }
@@ -208,18 +210,6 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         ex.printStackTrace();
                     }
                     removeCashOut();
-
-                    // try {
-                    //     Socket socket = new Socket("127.0.0.1", 2003);
-                    //     OutputStream outputStream = socket.getOutputStream();
-
-                    //     // TODO: This will have to be an exact room name based on what's selected
-                    //     String request = "LEAVE_ROOM";
-                    //     outputStream.write(request.getBytes());
-                    //     socket.close();
-                    // } catch (IOException ex) {
-                    //     ex.printStackTrace();
-                    // }
                 }
             });
             add(selectRoomButton, centerConstraints);
@@ -264,7 +254,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     }    
 
     public void removeBetButtons(){
-        System.out.println("Remove Bet called");
+        System.out.println("Remove Bet Buttons called");
         mainPanel.remove(gRoomRightPanel);
         mainPanel.remove(gRoomCentralPanel);
         mainPanel.remove(gRoomLeftPanel);
@@ -272,7 +262,6 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         mainPanel.add(cashoutCenterPanel, BorderLayout.CENTER);
         revalidate();
         repaint();
-
     }
     public void removeCashOut(){
         System.out.println("Cashout called");
@@ -529,21 +518,22 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     // Send the selected room to the server
                     roomNumber = roomListStrings[selectedRoomIndex];
                     System.out.println("Selected room: " + roomNumber);
-                    getGameRoomPanel();
-                    /*try {
+                    try {
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
-    
-                        // Send the selected room
-                        String request = "JOIN_ROOM " + roomListStrings[selectedRoomIndex] + " " + userId;
 
                         roomNumber = roomListStrings[selectedRoomIndex];
-                        
-                        // outputStream.write(request.getBytes());
-                        socket.close();
+
+                        String request = "JOIN_ROOM " + roomNumber + " " + userId;
+
+                        System.out.println("Join room request: " + request);
+                        outputStream.write(request.getBytes());
+
+                        socket.close(); // Close connection
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                    }*/
+                    }
+                    getGameRoomPanel();
                 }
             });
             add(selectRoomButton, selectButtonConstraints);

@@ -75,7 +75,7 @@ void joinGameRoom(std::string roomName, std::string userId)
         }
         else
         {
-            std::cerr << "Desired room not found\n";
+            std::cerr << "Desired room not found for joinGameRoom function\n";
             std::string joinResponse = "Room not found";
             send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
         }
@@ -96,7 +96,7 @@ void cashout(std::string roomName, std::string userId) // TODO James
     }
 
     // If the desired room is not found, you can handle the error or take appropriate action
-    std::cerr << "Desired room not found\n";
+    std::cerr << "Desired room not found for cashout function. Room name: " << roomName << "\n";
 }
 
 void leaveRoom(std::string roomName, std::string userId) // TODO James
@@ -118,7 +118,7 @@ void leaveRoom(std::string roomName, std::string userId) // TODO James
     }
 
     // If the desired room is not found, you can handle the error or take appropriate action
-    std::cerr << "Desired room not found\n";
+    std::cerr << "Desired room not found for leaveRoom function\n";
 }
 
 void createGameRoom(std::string userId)
@@ -126,13 +126,10 @@ void createGameRoom(std::string userId)
     int clientSocket = globalUsers[userId].socket; // must figure out how to get the socket from this
     // Create a new gameroom and add it to the list of active gamerooms
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
-    std::string roomName = "Room" + std::to_string(roomCounter++);
+    std::string roomName = "Room_" + std::to_string(roomCounter++);
     activeGameRooms.emplace_back(roomName);
 
-    // Spawn a new thread for the game room
-    std::thread roomThread(&Gameroom::acceptClient, &activeGameRooms.back(), userId); // must change to the userId
-    roomThread.detach();
-    std::cout << "New room created " << roomCounter - 1 << std::endl;
+    std::cout << "New room created " << roomName << std::endl;
 }
 
 void handleClient(std::string userId)
@@ -156,27 +153,29 @@ void handleClient(std::string userId)
         }
         else if (request.find("JOIN_ROOM") == 0)
         {
-            // Extract room name from request
             size_t pos = request.find(" ");
-            if (pos != std::string::npos)
+            size_t nextSpacePos = request.find(" ", pos + 1);
+
+            if (pos != std::string::npos && nextSpacePos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1);
-                std::string userId = request.substr(pos + 2);
+                std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
+                std::string userId = request.substr(nextSpacePos + 1);
+
+                std::cout << "Joining room: " << roomName << " with user ID: " << userId << std::endl;
+                
                 // TODO: Change to the user ID
                 joinGameRoom(roomName, userId); // Pass the client socket
             }
         }
         else if (request.find("CASHOUT") == 0)
         {
-            // Should expect request = "CASHOUT <Room name> <userID>"
-            // "CASHOUT Room_0 0"
-
-            // Extract room name from request
             size_t pos = request.find(" ");
-            if (pos != std::string::npos)
+            size_t nextSpacePos = request.find(" ", pos + 1);
+
+            if (pos != std::string::npos && nextSpacePos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1);
-                std::string userId = request.substr(pos + 2);
+                std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
+                std::string userId = request.substr(nextSpacePos + 1);
                 cashout(roomName, userId); // Pass the client socket
             }
         }
@@ -186,10 +185,12 @@ void handleClient(std::string userId)
             // We would expect this to be something like the below:
 
             size_t pos = request.find(" ");
-            if (pos != std::string::npos)
+            size_t nextSpacePos = request.find(" ", pos + 1);
+
+            if (pos != std::string::npos && nextSpacePos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1);
-                std::string userId = request.substr(pos + 2);
+                std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
+                std::string userId = request.substr(nextSpacePos + 1);
                 // TODO: Change to the user ID
                 leaveRoom(roomName, userId);
             }
@@ -197,7 +198,7 @@ void handleClient(std::string userId)
         else if (request == "INITIALIZE_USER")
         {
             // Send the userId back to the client
-            std::string initResponse = "USER_INITIALIZED " + userId;
+            std::string initResponse = userId;
             send(clientSocket, initResponse.c_str(), initResponse.length(), 0);
         }
         else
