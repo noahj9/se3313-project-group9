@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.util.*;
 import java.awt.List;
 import java.util.concurrent.TimeUnit;
+import javax.swing.Timer;
 
 public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
     private CountdownPanel countdownPanel;
@@ -26,22 +27,21 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public RoomsListCenterPanel roomListPanel;
     public JPanel mainPanel;
 
-    public String userId = "";
+    public static String userId = "";
     public String roomNumber = "";
     public int selectedRoomIndex = 0;
     public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
-    public String roomNumber="";
-    public String SERVER_ADDRESS = "127.0.0.1";
-    public int SERVER_PORT = 2003;
+    public static String SERVER_ADDRESS = "127.0.0.1";
+    public static int SERVER_PORT = 2003;
 
     public int betAmount = 0;
     public int cashAmount = 100;
 
     public Panel() {
         setLayout(new BorderLayout());
-        // countdownPanel = new CountdownPanel();
-        // countdownPanel.addCountdownListener(this);
-        // add(countdownPanel, BorderLayout.NORTH);
+        countdownPanel = new CountdownPanel();
+        countdownPanel.addCountdownListener(this);
+        add(countdownPanel, BorderLayout.NORTH);
       
         if(roomNumber.length()==0){
             leftPanel = new LeftPanel();
@@ -195,6 +195,18 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Cashout");
+
+                    try {
+                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                        OutputStream outputStream = socket.getOutputStream();
+
+                        String request = "CASHOUT";
+                        outputStream.write(request.getBytes());
+
+                        socket.close(); // Close connection
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                     removeCashOut();
 
                     // try {
@@ -397,7 +409,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("New Game button pressed");
                     try {
-                        Socket socket = new Socket("127.0.0.1", 2003);
+                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
 
                         // TODO: This will have to be an exact room name based on what's selected
@@ -417,7 +429,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Refresh Room List button pressed");
                     try {
-                        Socket socket = new Socket("127.0.0.1", 2003);
+                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
 
                         String request = "GET_ACTIVE_ROOMS";
@@ -519,7 +531,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     System.out.println("Selected room: " + roomNumber);
                     getGameRoomPanel();
                     /*try {
-                        Socket socket = new Socket("127.0.0.1", 2003);
+                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
     
                         // Send the selected room
@@ -547,7 +559,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         // Should receive a "userId" (string) from the server. Store this in a global variable
         try {
             // connect to the server
-            Socket socket = new Socket(serverAddress, serverPort);
+            Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
 
             // input stream to get response
             InputStream inputStream = socket.getInputStream();
@@ -565,7 +577,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             if (bytesRead != -1) {
                 String user_id = new String(buffer, 0, bytesRead);
                 userId = user_id; // set the global user id
-                System.out.println("Received user ID from server: " + message);
+                System.out.println("Received user ID from server: " + userId);
             } else {
                 System.out.println("No data received from server");
             }
