@@ -29,16 +29,16 @@ int numberOfUsers = 0;
 // Mutex for synchronizing access to activeGameRooms
 std::mutex gameRoomsMutex;
 
-std::string initializeUser()
+std::string initializeUser(int clientSocket)
 {
     std::lock_guard<std::mutex> lock(usersMutex);
-    // Create a new user object
-    // Initialize balance to $10, bet amount to 0, and inGame flag to false --> Call the damn constructor
-    // ** User id = numberOfUsers --> make it a string **
-    // numberOfUsers += 1
-    // Send user id back to client
+    std::string userId = std::to_string(numberOfUsers++); // Convert integer ID to string
 
-    // return user's id
+    // Example user setup, assuming User has a constructor that initializes necessary fields
+    User newUser(userId, 10.0, clientSocket); // Assuming User constructor takes socket as parameter
+    globalUsers[userId] = newUser;            // Store new user in global users map
+
+    return userId; // Return the new user's ID
 }
 
 std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of active rooms with mutex protect
@@ -56,27 +56,32 @@ std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of a
     return roomList;
 }
 
-void joinGameRoom(std::string roomName, std::string userId) // TODO James
-{
+void joinGameRoom(std::string roomName, std::string userId)
+{ // TODO James
     // Joining an ALREADY created room (existing)
     // If the desired room is found, add the client to the room by adding their USER ID to the room's clients list
     // we should make sure the room exists
     // we should send a confirmation message back to the client "you have connected to room_# successfully"
-
-    // find a room based on its name
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    int clientSocket = globalUsers[userId].socket; // must make sure this works
+
     for (auto &room : activeGameRooms)
     {
         if (room.name == roomName)
         {
-            // TODO: Change this to be the USER ID
-            room.acceptClient(numberOfUsers++);
+            // Assuming you have a function to send a message to a client by userId
+            room.acceptClient(userId);
+            std::string joinResponse = "You have successfully joined " + roomName;
+            send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
             return;
         }
+        else
+        {
+            std::cerr << "Desired room not found\n";
+            std::string joinResponse = "Room not found";
+            send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
+        }
     }
-
-    // If the desired room is not found, you can handle the error or take appropriate action
-    std::cerr << "Desired room not found\n";
 }
 
 void leaveRoom(std::string roomName, std::string userId) // TODO James
@@ -101,21 +106,23 @@ void leaveRoom(std::string roomName, std::string userId) // TODO James
     std::cerr << "Desired room not found\n";
 }
 
-void createGameRoom(int clientSocket)
+void createGameRoom(std::string userId)
 {
+    int clientSocket = globalUsers[userId].socket; // must figure out how to get the socket from this
     // Create a new gameroom and add it to the list of active gamerooms
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
-    std::string roomName = "Room_" + std::to_string(roomCounter++);
+    std::string roomName = "Room" + std::to_string(roomCounter++);
     activeGameRooms.emplace_back(roomName);
 
     // Spawn a new thread for the game room
-    std::thread roomThread(&Gameroom::acceptClient, &activeGameRooms.back(), clientSocket);
+    std::thread roomThread(&Gameroom::acceptClient, &activeGameRooms.back(), userId); // must change to the userId
     roomThread.detach();
     std::cout << "New room created " << roomCounter - 1 << std::endl;
 }
 
-void handleClient(int clientSocket)
+void handleClient(std::string userId)
 {
+    int clientSocket = globalUsers[userId].socket; // must make sure this works
     char buffer[1024];
     int bytesRead;
 
@@ -130,7 +137,7 @@ void handleClient(int clientSocket)
         }
         else if (request.find("CREATE_ROOM") == 0)
         {
-            createGameRoom(clientSocket);
+            createGameRoom(userId); // changes clientSocket to userId
         }
         else if (request.find("JOIN_ROOM") == 0)
         {
@@ -160,7 +167,9 @@ void handleClient(int clientSocket)
         }
         else if (request == "INITIALIZE_USER")
         {
-            // TODO
+            // Send the userId back to the client
+            std::string initResponse = "USER_INITIALIZED " + userId;
+            send(clientSocket, initResponse.c_str(), initResponse.length(), 0);
         }
         else
         {
@@ -232,8 +241,12 @@ int main()
             std::cerr << "Error accepting client connection\n";
             continue;
         }
+        // Initialize user and get their userId
+        std::string userId = initializeUser(clientSocket);
 
-        std::thread clientThread(handleClient, clientSocket);
+        // Pass userId to the thread handling client communication
+        std::thread clientThread(handleClient, userId);
+
         clientThread.detach();
     }
 
