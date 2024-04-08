@@ -47,7 +47,7 @@ int main() {
         char buffer[1024] = {0};
         int bytesRead = recv(sock, buffer, sizeof(buffer), 0);
         if (bytesRead > 0) {
-            std::cout << "Server response: " << std::string(buffer, bytesRead) << "\n";
+            std::cout << "Server response: \n" << std::string(buffer, bytesRead) << "\n";
         }
     } else if (command == "get") {
         const std::string createRoomCmd = "GET_ACTIVE_ROOMS";
@@ -57,7 +57,7 @@ int main() {
         char buffer[1024] = {0};
         int bytesRead = recv(sock, buffer, sizeof(buffer), 0);
         if (bytesRead > 0) {
-            std::cout << "Server response: " << std::string(buffer, bytesRead) << "\n";
+            std::cout << "Server response: \n" << std::string(buffer, bytesRead) << "\n";
         }
     }
 

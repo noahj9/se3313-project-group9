@@ -22,7 +22,7 @@ std::atomic<bool> stopRequested(false);
 
 // Users are global because this will be updated by the socket rather than by me :)
 std::unordered_map<std::string, User> globalUsers;
-mutable std::mutex usersMutex; // Global mutex for synchronizing access to the users
+std::mutex usersMutex; // Global mutex for synchronizing access to the users
 
 void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
     std::string userInput;
@@ -143,8 +143,6 @@ public:
         const auto& roomName = userRooms.find(userId);
         if (roomName != userRooms.end()) {
             std::cout << "You are in room: " << roomName->second << std::endl;
-            // If we want to show more details like who else is in the room, game status etc., we could expand this part.
-            // For instance, list all users in the same room:
             rooms[roomName->second]->listAllUsers();
         } else {
             std::cout << "You are not currently in any room." << std::endl;
