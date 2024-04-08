@@ -447,34 +447,40 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Refresh Room List button pressed");
                     try {
+                        // connect to the server
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                        InputStream inputStream = socket.getInputStream();
                         OutputStream outputStream = socket.getOutputStream();
-                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                        String request = "GET_ACTIVE_ROOMS";
-                        outputStream.write(request.getBytes());
-            
-                        List<String> roomList = new ArrayList<>();
+                        String initializeMessage = "GET_ACTIVE_ROOMS";
+                        outputStream.write(initializeMessage.getBytes());
+
+                        ArrayList<String> roomList = new ArrayList<>();
+
+                        // Read the message from the server
+                        byte[] buffer = new byte[1024];
+                        int bytesRead = inputStream.read(buffer);
+                        if (bytesRead != -1) {
+                            String response = new String(buffer, 0, bytesRead);
+                            String[] roomNames = response.split(" "); // Split the response string by spaces
+
+                            // Add each room name to the list
+                            for (String roomName : roomNames) {
+                                roomList.add(roomName);
+                            }
+                            
+                            if (roomList.isEmpty()) {
+                                roomList.add("No rooms available");
+                            }
+    
+                            // Now, update roomListStrings and refresh UI accordingly
+                            System.out.println("roomList after creating new room: " + roomList);
+                            roomListStrings = roomList.toArray(new String[0]);
+                        } else {
+                            System.out.println("No data received from server");
+                        }
+                        socket.close();
                         
-                        String response = in.readLine();
-                        System.out.println("Response from server: " + response);
-                        String[] roomNames = response.split(" "); // Split the response string by spaces
-
-                        // Add each room name to the list
-                        for (String roomName : roomNames) {
-                            roomsList.add(roomName);
-                        }
-
-                        in.close()
-                        socket.close(); // Close connection
-
-                        if (roomList.isEmpty()) {
-                            roomList.add("No rooms available");
-                        }
-
-                        // Now, update roomListStrings and refresh UI accordingly
-                        //roomListStrings = roomList.toArray(new String[0]);
-                        System.out.println("roomList after creating new room" +roomList);
                         updateRoomListUI();
                     } catch (IOException ex) {
                         ex.printStackTrace();

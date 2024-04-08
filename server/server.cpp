@@ -75,7 +75,7 @@ void joinGameRoom(std::string roomName, std::string userId)
         }
         else
         {
-            std::cerr << "Desired room not found for joinGameRoom function\n";
+            std::cerr << "Desired room not found for joinGameRoom function. Room name given: " << roomName << " \n";
             std::string joinResponse = "Room not found";
             send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
         }
@@ -183,12 +183,13 @@ void handleClient(std::string userId)
         else if (request.find("JOIN_ROOM") == 0)
         {
             size_t pos = request.find(" ");
-            size_t nextSpacePos = request.find(" ", pos + 1);
+            size_t firstSpacePos = request.find(" ", pos + 1);
+            size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
 
-            if (pos != std::string::npos && nextSpacePos != std::string::npos)
+            if (pos != std::string::npos && firstSpacePos != std::string::npos && secondSpacePos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
-                std::string userId = request.substr(nextSpacePos + 1);
+                std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
+                std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
 
                 std::cout << "Joining room: " << roomName << " with user ID: " << userId << std::endl;
 
