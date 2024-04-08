@@ -1,5 +1,7 @@
 
 import javax.swing.*;
+import javax.swing.Timer;
+
 import java.awt.*;
 import components.*;
 import java.io.*;
@@ -20,10 +22,11 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public GameRoomCenterPanel gRoomCentralPanel;
     public GameRoomLeftPanel gRoomLeftPanel;
     public CashoutCenterPanel cashoutCenterPanel;
+    public RoomsListCenterPanel roomListPanel;
     public JPanel mainPanel;
 
-    public String userId = "1";
-    public String roomNumber;
+    public String userId = "";
+    public String roomNumber = "";
 
     public int selectedRoomIndex = 0;
     public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
@@ -38,11 +41,16 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             leftPanel = new LeftPanel();
             rightPanel = new RightPanel();
             centerPanel = new CenterPanel();
+            roomListPanel = new RoomsListCenterPanel();
           
             mainPanel = new JPanel(new BorderLayout());
+            mainPanel.add(roomListPanel, BorderLayout.NORTH);
             mainPanel.add(leftPanel, BorderLayout.WEST);
             mainPanel.add(rightPanel, BorderLayout.EAST);
             mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+            roomListPanel.highlightRoom(selectedRoomIndex);
+
             add(mainPanel, BorderLayout.SOUTH);
         }else{
             gRoomLeftPanel = new GameRoomLeftPanel();
@@ -53,8 +61,6 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
             add(mainPanel, BorderLayout.SOUTH);
         }
-        
-
     }
 
     private class GameRoomLeftPanel extends JPanel {
@@ -137,6 +143,34 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             add(selectRoomButton, centerConstraints);
         }
     }
+
+    private class RoomsListCenterPanel extends JPanel {
+        private JLabel[] roomLabels;
+    
+        public RoomsListCenterPanel() {
+            setLayout(new GridLayout(roomListStrings.length, 1));
+            roomLabels = new JLabel[roomListStrings.length];
+    
+            for (int i = 0; i < roomListStrings.length; i++) {
+                roomLabels[i] = new JLabel(roomListStrings[i]);
+                roomLabels[i].setHorizontalAlignment(SwingConstants.CENTER);
+                add(roomLabels[i]);
+            }
+        }
+    
+        // Method to highlight the selected room
+        public void highlightRoom(int selectedIndex) {
+            for (int i = 0; i < roomLabels.length; i++) {
+                if (i == selectedIndex) {
+                    roomLabels[i].setBackground(Color.YELLOW); // Highlight color
+                    roomLabels[i].setOpaque(true);
+                } else {
+                    roomLabels[i].setBackground(null); // Reset color
+                }
+            }
+        }
+    }       
+
     public void removeBetButtons(){
         System.out.println("Remove Bet called");
         mainPanel.remove(gRoomCentralPanel);
@@ -164,14 +198,32 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         leftPanel = new LeftPanel();
         rightPanel = new RightPanel();
         centerPanel = new CenterPanel();
+        roomListPanel = new RoomsListCenterPanel();
 
+        mainPanel.add(roomListPanel, BorderLayout.NORTH);
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+        roomListPanel.highlightRoom(selectedRoomIndex);
+
         add(mainPanel, BorderLayout.SOUTH);
         revalidate();
         repaint();
 
+    }
+    public void getGameRoomPanel(){
+        mainPanel.remove(leftPanel);
+        mainPanel.remove(rightPanel);
+        mainPanel.remove(centerPanel);
+        mainPanel.remove(roomListPanel);
+        gRoomLeftPanel = new GameRoomLeftPanel();
+        gRoomCentralPanel = new GameRoomCenterPanel();
+        mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
+        mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        add(mainPanel, BorderLayout.SOUTH);
+        revalidate();
+        repaint();
     }
     public void countdownFinished() {
         remove(countdownPanel);
@@ -209,6 +261,38 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
 
     // Display the current selected room
     JLabel selectedRoomLabel = new JLabel(roomListStrings[selectedRoomIndex]);
+
+    public class RoomListPanel extends JPanel {
+        private String[] roomListStrings;
+
+        public RoomListPanel(String[] roomListStrings) {
+            this.roomListStrings = roomListStrings;
+            setupUI();
+        }
+
+        private void setupUI() {
+            setLayout(new GridLayout(roomListStrings.length + 1, 1));
+
+            // Add labels for each room in the room list
+            for (String room : roomListStrings) {
+                JLabel roomLabel = new JLabel(room);
+                roomLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                add(roomLabel);
+            }
+
+            // Add a button for room selection
+            JButton selectRoomButton = new JButton("Select Room");
+            selectRoomButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Handle room selection here
+                    System.out.println("Selected room: " + roomListStrings[selectedRoomIndex]);
+                }
+            });
+            add(selectRoomButton);
+        }
+    }
+
 
     private class LeftPanel extends JPanel {
         public LeftPanel() {
@@ -293,6 +377,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     selectedRoomIndex = (selectedRoomIndex - 1 + roomListStrings.length) % roomListStrings.length;
                     selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
+                    roomListPanel.highlightRoom(selectedRoomIndex);
                 }
             });
             add(upButton, rightConstraints);
@@ -303,6 +388,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     selectedRoomIndex = (selectedRoomIndex + 1) % roomListStrings.length;
                     selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
+                    roomListPanel.highlightRoom(selectedRoomIndex);
                 }
             });
             rightConstraints.gridy = 1;
@@ -341,18 +427,23 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // Send the selected room to the server
-                    try {
+                    roomNumber = roomListStrings[selectedRoomIndex];
+                    System.out.println("Selected room: " + roomNumber);
+                    getGameRoomPanel();
+                    /*try {
                         Socket socket = new Socket("127.0.0.1", 2003);
                         OutputStream outputStream = socket.getOutputStream();
     
                         // Send the selected room
                         String request = "JOIN_ROOM " + roomListStrings[selectedRoomIndex] + " " + userId;
+
+                        roomNumber = roomListStrings[selectedRoomIndex];
                         
-                        outputStream.write(request.getBytes());
+                        // outputStream.write(request.getBytes());
                         socket.close();
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                    }
+                    }*/
                 }
             });
             add(selectRoomButton, selectButtonConstraints);
