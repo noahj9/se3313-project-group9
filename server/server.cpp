@@ -35,8 +35,7 @@ std::string initializeUser(int clientSocket)
     std::string userId = std::to_string(numberOfUsers++); // Convert integer ID to string
 
     // Example user setup, assuming User has a constructor that initializes necessary fields
-    User newUser(userId, 10.0, clientSocket); // Assuming User constructor takes socket as parameter
-    globalUsers[userId] = newUser;            // Store new user in global users map
+    globalUsers[userId] = User(userId, clientSocket);                       // Store new user in global users map
 
     return userId; // Return the new user's ID
 }
@@ -82,6 +81,23 @@ void joinGameRoom(std::string roomName, std::string userId)
             send(clientSocket, joinResponse.c_str(), joinResponse.length(), 0);
         }
     }
+}
+
+void cashout(std::string roomName, std::string userId) // TODO James
+{
+    // find a room based on its name
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    for (auto &room : activeGameRooms)
+    {
+        if (room.name == roomName)
+        {
+            room.cashoutForUser(userId);
+            return;
+        }
+    }
+
+    // If the desired room is not found, you can handle the error or take appropriate action
+    std::cerr << "Desired room not found\n";
 }
 
 void leaveRoom(std::string roomName, std::string userId) // TODO James
@@ -149,6 +165,20 @@ void handleClient(std::string userId)
                 std::string userId = request.substr(pos + 2);
                 // TODO: Change to the user ID
                 joinGameRoom(roomName, userId); // Pass the client socket
+            }
+        }
+        else if (request.find("CASHOUT") == 0)
+        {
+            // Should expect request = "CASHOUT <Room name> <userID>"
+            // "CASHOUT Room_0 0"
+
+            // Extract room name from request
+            size_t pos = request.find(" ");
+            if (pos != std::string::npos)
+            {
+                std::string roomName = request.substr(pos + 1);
+                std::string userId = request.substr(pos + 2);
+                cashout(roomName, userId); // Pass the client socket
             }
         }
         else if (request == "LEAVE_ROOM")

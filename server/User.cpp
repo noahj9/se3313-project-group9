@@ -1,7 +1,7 @@
 #include "User.h"
 
 // Constructor to initialize user with id and balance
-User::User(const std::string& id, double balance, int socket) : id(id), socket(socket), balance(balance), betAmount(0), inGame(false) {}
+User::User(const std::string& id, int socket) : id(id), socket(socket), betAmount(0), inGame(false) {}
 
 // Method to allow a user to place a bet
 void User::placeBet(double amount) {

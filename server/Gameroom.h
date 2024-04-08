@@ -15,13 +15,13 @@ class Gameroom
 private:
     double multiplier;            // Current game multiplier
     bool gameInProgress;          // Flag to check if a game is currently in progress
-    mutable std::mutex gameMutex; // Mutex for synchronizing access to game state
+    std::mutex gameMutex;         // Mutex for synchronizing access to game state
 
 public:
     std::string name;
 
     // clients = users --> string holding the user id
-    std::vector<int> clients;
+    std::vector<std::string> clients;
 
     // Default constructor
     Gameroom();
@@ -42,8 +42,9 @@ public:
     Gameroom &operator=(const Gameroom &) = delete;
 
     // Method declarations
-    void acceptClient(int clientSocket);
+    void acceptClient(std::string userId);
     void removeClient(std::string userId);
+    void cashoutForUser(std::string userId);
     bool anyUserInGame() const;
     void startGame();
     void userStops(const std::string &userId);

@@ -52,6 +52,7 @@ void handleUserInput(std::atomic<bool> &stopRequested, std::function<void(std::s
 // TODO: Change to accept user ID
 void Gameroom::acceptClient(std::string userId)
 {
+    std::lock_guard<std::mutex> lock(gameMutex); // Lock for thread safety
     // add userID to list of users in this game room
     clients.push_back(userId);
 
@@ -69,24 +70,57 @@ void Gameroom::acceptClient(std::string userId)
 // TODO: Change to accept user ID
 void Gameroom::removeClient(std::string userId)
 {
+    std::lock_guard<std::mutex> lock(gameMutex); // Lock for thread safety
+
     // similar logic to acceptClient, but remove the client socket from the list of userIds in the game room
     // Find the userID in the vector
     auto it = std::find(clients.begin(), clients.end(), userId);
     clients.erase(it);
 }
 
+void Gameroom::cashoutForUser(std::string userId)
+{
+    std::lock_guard<std::mutex> lock(gameMutex); // Lock for thread safety
+
+    // Check if this userId is in the list of user IDs of this gameroom
+    auto it = std::find(clients.begin(), clients.end(), userId);
+    if (it == clients.end())
+    {
+        // If userId is not in this game room's list of clients, just return;
+        std::cerr << "User " << userId << " not in the game room: " << name << std::endl;
+        return;
+    }
+
+    // Safely access the globalUsers map to get the user's details
+    std::lock_guard<std::mutex> usersLock(usersMutex);
+    auto userIt = globalUsers.find(userId);
+    if(userIt == globalUsers.end())
+    {
+        std::cerr << "User " << userId << " not found in global users." << std::endl;
+        return;
+    }
+
+    // Calculate the amount won and update the user's balance
+    User& user = userIt->second; // Get a reference to the user to modify directly
+    double amountWon = user.betAmount * multiplier;
+    user.balance += amountWon;
+
+    // Reset the user's bet amount to indicate they've cashed out
+    user.betAmount = 0;
+
+    std::cout << "User " << userId << " cashed out for a value of $" << amountWon << std::endl;
+}
+
+
 // Use this to check if a user is in a game
 bool Gameroom::anyUserInGame() const
 {
-    std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
     return clients.size() > 0;
 }
 
 // Starts a new game, resetting necessary components and starting the multiplier increase
 void Gameroom::startGame()
 {
-    std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-
     if (!gameInProgress && anyUserInGame())
     {
         std::cout << "Starting a new game... Type 'stop <userID>' to secure your bet at the current multiplier." << std::endl;
@@ -176,7 +210,6 @@ void Gameroom::endGame()
 // Returns whether a game is currently in progress
 bool Gameroom::isGameInProgress() const
 {
-    std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
     return gameInProgress;
 }
 
@@ -217,7 +250,6 @@ void Gameroom::placeUserBet(const std::string &userId, double betAmount)
 void Gameroom::listAllUsers() const
 {
     // change to list all users IN THIS GAME ROOM, rather than all users connected to the server
-
     std::lock_guard<std::mutex> lock(usersMutex);
 
     if (globalUsers.empty())

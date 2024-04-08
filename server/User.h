@@ -13,7 +13,7 @@ public:
     int socket; // Socket associated with the user
 
     // Constructor
-    User(const std::string& id, double balance, int socket);
+    User(const std::string& id, int socket);
 
     void placeBet(double amount);
     void reset();
