@@ -23,38 +23,40 @@ extern std::unordered_map<std::string, User> globalUsers;
 extern std::mutex usersMutex;
 extern std::atomic<bool> stopRequested;
 
-// Constructor with parameter 
+// Constructor with parameter
 Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false), name("") {}
 Gameroom::Gameroom(const std::string &roomName) : multiplier(1.0), gameInProgress(false), name(roomName) {}
-Gameroom::Gameroom(Gameroom&& other) : multiplier(1.0), gameInProgress(false), name(other.name), clients(other.clients) {}
-
+Gameroom::Gameroom(Gameroom &&other) : multiplier(1.0), gameInProgress(false), name(other.name), clients(other.clients) {}
 
 // TODO: Change this to accept the client's BUTTON PRESS ("CASHOUT")
 // This function WAS to ensure a second thread was used to ensure the COMMAND LINE game could be played.
 // Likely do not need this function in the final implementation.
-void handleUserInput(std::atomic<bool>& stopRequested, std::function<void(std::string)> stopFunction) {
+void handleUserInput(std::atomic<bool> &stopRequested, std::function<void(std::string)> stopFunction)
+{
     std::string userInput;
-    while (!stopRequested) {
-        if (std::getline(std::cin, userInput)) { // This will still block, but now it's in a separate thread
+    while (!stopRequested)
+    {
+        if (std::getline(std::cin, userInput))
+        { // This will still block, but now it's in a separate thread
             std::istringstream iss(userInput);
             std::string command, userId;
             iss >> command >> userId;
-            if (command == "stop") {
+            if (command == "stop")
+            {
                 stopFunction(userId);
             }
         }
     }
 }
 
-
 // TODO: Change to accept user ID
-void Gameroom::acceptClient(int clientSocket)
+void Gameroom::acceptClient(std::string userId)
 {
-    // add client socket to list of managed sockets by this game room
-    clients.push_back(clientSocket);
+    // add userID to list of users in this game room
+    clients.push_back(userId);
 
     // TODO: Get the client's socket from the "globalUsers"
-    // int clientSocket = globalUsers[userId].socket;
+    int clientSocket = globalUsers[userId].socket;
 
     // send a socket connection msg to client saying they joined properly
     std::string message = "You have successfully joined the game room: " + name + "\n";
@@ -62,19 +64,15 @@ void Gameroom::acceptClient(int clientSocket)
     {
         std::cerr << "Error sending join message to client\n";
     }
-
-    // TODO: print out the clients in the game room --> can be removed if wanted
-    std::cout << "Clients in the game room " << name << ":\n" << std::endl;
-    for (int clientSocket : clients)
-    {
-        std::cout << "Client socket: " << clientSocket << std::endl;
-    }
 }
 
 // TODO: Change to accept user ID
 void Gameroom::removeClient(std::string userId)
 {
     // similar logic to acceptClient, but remove the client socket from the list of userIds in the game room
+    // Find the userID in the vector
+    auto it = std::find(clients.begin(), clients.end(), userId);
+    clients.erase(it);
 }
 
 // Use this to check if a user is in a game
@@ -216,23 +214,26 @@ void Gameroom::placeUserBet(const std::string &userId, double betAmount)
 }
 
 // List all users in the gameroom
-void Gameroom::listAllUsers() const {
+void Gameroom::listAllUsers() const
+{
     // change to list all users IN THIS GAME ROOM, rather than all users connected to the server
 
     std::lock_guard<std::mutex> lock(usersMutex);
-    
-    if (globalUsers.empty()) {
+
+    if (globalUsers.empty())
+    {
         std::cout << "There are no users in the game room." << std::endl;
         return;
     }
-    
+
     std::cout << "Listing all users in the game room:" << std::endl;
-    for (const auto& pair : globalUsers) {
-        const auto& userId = pair.first;
-        const auto& user = pair.second;
-        std::cout << "User ID: " << userId 
-                  << ", Balance: $" << user.balance 
-                  << ", In Game: " << (user.inGame ? "Yes" : "No") 
+    for (const auto &pair : globalUsers)
+    {
+        const auto &userId = pair.first;
+        const auto &user = pair.second;
+        std::cout << "User ID: " << userId
+                  << ", Balance: $" << user.balance
+                  << ", In Game: " << (user.inGame ? "Yes" : "No")
                   << std::endl;
     }
 }

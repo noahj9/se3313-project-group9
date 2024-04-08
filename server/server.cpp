@@ -29,18 +29,17 @@ int numberOfUsers = 0;
 // Mutex for synchronizing access to activeGameRooms
 std::mutex gameRoomsMutex;
 
-// std::string initializeUser()
-// {
-//     // Create a new user object
-//     // Initialize balance to $10, bet amount to 0, and inGame flag to false --> Call the damn constructor
-//     // ** User id = numberOfUsers --> make it a string **
-//     // numberOfUsers += 1
-//     // Send user id back to client
+std::string initializeUser()
+{
+    std::lock_guard<std::mutex> lock(usersMutex);
+    // Create a new user object
+    // Initialize balance to $10, bet amount to 0, and inGame flag to false --> Call the damn constructor
+    // ** User id = numberOfUsers --> make it a string **
+    // numberOfUsers += 1
+    // Send user id back to client
 
-//     std::lock_guard<std::mutex> lock(usersMutex);
-
-//     // return user's id
-// }
+    // return user's id
+}
 
 std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of active rooms with mutex protect
 // then we need to parse this into string list
