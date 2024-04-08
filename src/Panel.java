@@ -449,14 +449,15 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     try {
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
+                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                         String request = "GET_ACTIVE_ROOMS";
                         outputStream.write(request.getBytes());
             
-                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        ArrayList<String> roomList = new ArrayList<>();
+                        List<String> roomList = new ArrayList<>();
                         
-                        String response = reader.readLine();
+                        String response = in.readLine();
+                        System.out.println("Response from server: " + response);
                         String[] roomNames = response.split(" "); // Split the response string by spaces
 
                         // Add each room name to the list
@@ -464,6 +465,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                             roomsList.add(roomName);
                         }
 
+                        in.close()
                         socket.close(); // Close connection
 
                         if (roomList.isEmpty()) {
