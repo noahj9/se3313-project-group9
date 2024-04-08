@@ -5,6 +5,7 @@ import components.*;
 import java.io.*;
 import java.net.*;
 import java.awt.event.*;
+
 public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
     private CountdownPanel countdownPanel;
     private Multiplier multiplier;
@@ -65,6 +66,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         timer.setRepeats(false);
         timer.start();
     }
+
     private class LeftPanel extends JPanel {
         public LeftPanel() {
             setLayout(new GridBagLayout());
@@ -78,8 +80,26 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             newGameButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("New Game Room button pressed");
+                    System.out.println("New Game button pressed");
+                    try {
+                        // open socket connection
+                        Socket socket = new Socket("localhost", 2003);
 
+                        // create output stream
+                        OutputStream outputStream = socket.getOutputStream();
+                        PrintWriter out = new PrintWriter(outputStream, true);
+
+                        // send the message
+                        out.println("CREATE_ROOM");
+
+                        // close the connection
+                        socket.close();
+
+                        System.out.println("New Game button pressed and CREATE_ROOM message sent");
+                    } catch (IOException ex) {
+                        // handle exception if error with socket
+                        ex.printStackTrace();
+                    }
                 }
             });
             add(newGameButton, leftConstraints);
@@ -156,15 +176,15 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     }
     // bet - up and down arrow with bet balance
     // cash out
-    // leave room 
+    // leave room
 
-    public static void userJoin(){
-        //Logic for creating user 
+    public static void userJoin() {
+        // Logic for creating user
 
     }
 
     public static void main(String[] args) {
-        //User handling to add user -> create user 
+        // User handling to add user -> create user
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Loop of full animation");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
