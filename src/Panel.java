@@ -131,6 +131,19 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     // Place bet
                     System.out.println("Bet Placed");
+
+                    try {
+                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                        OutputStream outputStream = socket.getOutputStream();
+
+                        String request = "BET " + roomNumber + " " + userId + " " + betAmount;
+                        outputStream.write(request.getBytes());
+
+                        socket.close(); // Close connection
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+
                     removeBetButtons();
                 }
             });

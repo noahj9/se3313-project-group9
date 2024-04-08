@@ -82,7 +82,7 @@ void joinGameRoom(std::string roomName, std::string userId)
     }
 }
 
-void cashout(std::string roomName, std::string userId) // TODO James
+void cashout(std::string roomName, std::string userId)
 {
     // find a room based on its name
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
@@ -97,6 +97,23 @@ void cashout(std::string roomName, std::string userId) // TODO James
 
     // If the desired room is not found, you can handle the error or take appropriate action
     std::cerr << "Desired room not found for cashout function. Room name: " << roomName << "\n";
+}
+
+void bet(std::string roomName, std::string userId, std::string betAmount)
+{
+    // find a room based on its name
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    for (auto &room : activeGameRooms)
+    {
+        if (room.name == roomName)
+        {
+            room.placeUserBet(userId, std::stod(betAmount));
+            return;
+        }
+    }
+
+    // If the desired room is not found, you can handle the error or take appropriate action
+    std::cerr << "Desired room not found for bet function. Room name: " << roomName << "\n";
 }
 
 void leaveRoom(std::string roomName, std::string userId) // TODO James
@@ -162,7 +179,7 @@ void handleClient(std::string userId)
                 std::string userId = request.substr(nextSpacePos + 1);
 
                 std::cout << "Joining room: " << roomName << " with user ID: " << userId << std::endl;
-                
+
                 // TODO: Change to the user ID
                 joinGameRoom(roomName, userId); // Pass the client socket
             }
@@ -177,6 +194,23 @@ void handleClient(std::string userId)
                 std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
                 std::string userId = request.substr(nextSpacePos + 1);
                 cashout(roomName, userId); // Pass the client socket
+            }
+        }
+        else if (request.find("BET") == 0)
+        {
+            size_t pos = request.find(" ");
+            size_t firstSpacePos = request.find(" ", pos + 1);
+            size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
+
+            if (pos != std::string::npos && firstSpacePos != std::string::npos)
+            {
+                std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
+                std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
+                std::string betAmount = request.substr(secondSpacePos + 1);
+
+                std::cout << "Placing bet in room: " << roomName << " with user ID: " << userId << " and bet amount: " << betAmount << std::endl;
+
+                bet(roomName, userId, betAmount); // Pass the client socket
             }
         }
         else if (request == "LEAVE_ROOM")
