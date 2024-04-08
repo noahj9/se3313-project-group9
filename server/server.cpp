@@ -34,10 +34,9 @@ std::string initializeUser(int clientSocket)
     std::lock_guard<std::mutex> lock(usersMutex);
     std::string userId = std::to_string(numberOfUsers++); // Convert integer ID to string
 
-    // Example user setup, assuming User has a constructor that initializes necessary fields
-    globalUsers[userId] = User(userId, clientSocket);                       // Store new user in global users map
-
-    return userId; // Return the new user's ID
+    User newUser(userId, clientSocket);
+    globalUsers[userId] = newUser;
+    return userId;
 }
 
 std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of active rooms with mutex protect
