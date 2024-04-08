@@ -52,7 +52,7 @@ public class Multiplier extends JPanel {
         this.multiplierListener = listener;
     }
 
-    private void fireMultiplierStoppedEvent() {
+    public void fireMultiplierStoppedEvent() {
         if (multiplierListener != null) {
             multiplierListener.multiplierStopped();
         }
