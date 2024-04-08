@@ -20,7 +20,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public JPanel mainPanel;
 
     public String userId;
-    public String roomNumber = "444";
+    public String roomNumber;
 
     public Panel() {
         setLayout(new BorderLayout());
