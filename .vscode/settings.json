@@ -98,6 +98,8 @@
         "numeric": "cpp",
         "random": "cpp",
         "numbers": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "__verbose_abort": "cpp",
+        "variant": "cpp"
     }
 }

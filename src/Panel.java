@@ -26,6 +26,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public CashoutCenterPanel cashoutCenterPanel;
     public RoomsListCenterPanel roomListPanel;
     public JPanel mainPanel;
+    public JLabel statusLabel;
 
     public static String userId = "";
     public String roomNumber = "";
@@ -39,9 +40,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
 
     public Panel() {
         setLayout(new BorderLayout());
-        countdownPanel = new CountdownPanel();
-        countdownPanel.addCountdownListener(this);
-        add(countdownPanel, BorderLayout.NORTH);
+
+        statusLabel = new JLabel("Select a room and user");
+        add(statusLabel, BorderLayout.PAGE_START); // Add the label to the panel
 
         // Initialize roomListStrings with at least one value to avoid ArrayIndexOutOfBoundsException
         roomListStrings = new String[] {"No rooms available"};
@@ -89,6 +90,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Leave Room");
                     leaveRoom();
+                    updateStatus();
 
                     // try {
                     //     Socket socket = new Socket("127.0.0.1", 2003);
@@ -261,6 +263,12 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         }
     }  
 
+    public void updateStatus() {
+        String statusText = "Room: " + (roomNumber.isEmpty() ? "None" : roomNumber) +
+                            ", User ID: " + (userId.isEmpty() ? "Not set" : userId);
+        statusLabel.setText(statusText);
+    }
+
     public void updateBetAmount(int newBetAmount) {
         if (newBetAmount >= 0) {
             betAmount = newBetAmount;
@@ -297,6 +305,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         repaint();
     }
     public void leaveRoom(){
+        roomNumber = "";
+
         mainPanel.remove(gRoomCentralPanel);
         mainPanel.remove(gRoomLeftPanel);
         mainPanel.remove(gRoomRightPanel);
@@ -354,7 +364,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         });
         timer2.setRepeats(false);
         timer2.start();
-        Timer timer = new Timer(1500, e -> {
+        Timer timer = new Timer(100, e -> {
             remove(explosion);
             remove(multiplier);
             countdownPanel = new CountdownPanel();
@@ -560,6 +570,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 public void actionPerformed(ActionEvent e) {
                     // Send the selected room to the server
                     roomNumber = roomListStrings[selectedRoomIndex];
+                    updateStatus();
                     System.out.println("Selected room: " + roomNumber);
                     try {
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
@@ -572,7 +583,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         System.out.println("Join room request: " + request);
                         outputStream.write(request.getBytes());
 
-                        socket.close(); // Close connection
+                        ServerListener listener = new ServerListener(socket);
+                        Thread listenerThread = new Thread(listener);
+                        listenerThread.start();
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
@@ -586,6 +599,71 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     // bet - up and down arrow with bet balance
     // cash out
     // leave room
+
+    // Step 1: ServerListener class
+    class ServerListener implements Runnable {
+        private Socket socket;
+        private volatile boolean running = true; // To control the running of the thread
+
+        public ServerListener(Socket socket) {
+            this.socket = socket;
+        }
+
+        public void run() {
+            try {
+                InputStream inputStream = socket.getInputStream();
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+
+                while (running && (bytesRead = inputStream.read(buffer)) != -1) {
+                    String message = new String(buffer, 0, bytesRead);
+                    handleServerMessage(message);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        private void handleServerMessage(String message) {
+            if (message.startsWith("START_GAME")) {
+                SwingUtilities.invokeLater(() -> {
+                    if (countdownPanel == null) {
+                        countdownPanel = new CountdownPanel();
+                        countdownPanel.addCountdownListener(Panel.this);
+                    }
+                    add(countdownPanel, BorderLayout.NORTH);
+                    revalidate(); // Refresh panel to display the countdown
+                    repaint();
+                });
+                System.out.println("Game started.");
+            } else if (message.startsWith("END_GAME")) {
+                // Handle END_GAME
+                System.out.println("Game ended.");
+
+            } else if (message.startsWith("UPDATE_BALANCE")) {
+                // Extract and update balance
+                String[] parts = message.split(" ");
+                if (parts.length > 1) {
+                    String balance = parts[1];
+                    System.out.println("Balance updated: " + balance);
+                    // Update GUI with new balance here
+                }
+            }
+        }
+
+        // Call this method to stop the thread
+        public void stopListening() {
+            running = false;
+        }
+    }
+      
+
 
     public void updateRoomListUI() {
         // Remove existing RoomsListCenterPanel if present
@@ -641,7 +719,6 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public static void main(String[] args) {
