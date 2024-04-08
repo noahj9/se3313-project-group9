@@ -355,7 +355,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     }
 
     public void multiplierStopped() {
-        Timer timer2 = new Timer(150, e -> {
+        Timer timer2 = new Timer(100, e -> {
             remove(player);
             explosion = new Explosion();
             add(explosion, BorderLayout.CENTER);
@@ -364,7 +364,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         });
         timer2.setRepeats(false);
         timer2.start();
-        Timer timer = new Timer(100, e -> {
+        Timer timer = new Timer(10000, e -> {
             remove(explosion);
             remove(multiplier);
             countdownPanel = new CountdownPanel();
@@ -633,18 +633,14 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         private void handleServerMessage(String message) {
             if (message.startsWith("START_GAME")) {
                 SwingUtilities.invokeLater(() -> {
-                    if (countdownPanel == null) {
-                        countdownPanel = new CountdownPanel();
-                        countdownPanel.addCountdownListener(Panel.this);
-                    }
-                    add(countdownPanel, BorderLayout.NORTH);
-                    revalidate(); // Refresh panel to display the countdown
-                    repaint();
+                    countdownFinished();
                 });
                 System.out.println("Game started.");
             } else if (message.startsWith("END_GAME")) {
                 // Handle END_GAME
                 System.out.println("Game ended.");
+                multiplierStopped();
+
 
             } else if (message.startsWith("UPDATE_BALANCE")) {
                 // Extract and update balance
