@@ -30,7 +30,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public static String userId = "";
     public String roomNumber = "";
     public int selectedRoomIndex = 0;
-    public String roomListStrings[] = {"Room_0", "Room_1", "Room_2", "Room_3", "Room_4"};
+    public String roomListStrings[] = {};
     public static String SERVER_ADDRESS = "127.0.0.1";
     public static int SERVER_PORT = 2003;
 
@@ -42,6 +42,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         countdownPanel = new CountdownPanel();
         countdownPanel.addCountdownListener(this);
         add(countdownPanel, BorderLayout.NORTH);
+
+        // Initialize roomListStrings with at least one value to avoid ArrayIndexOutOfBoundsException
+        roomListStrings = new String[] {"No rooms available"};
       
         if(roomNumber.length()==0){
             leftPanel = new LeftPanel();
@@ -55,7 +58,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             mainPanel.add(rightPanel, BorderLayout.EAST);
             mainPanel.add(centerPanel, BorderLayout.CENTER);
 
-            roomListPanel.highlightRoom(selectedRoomIndex);
+            if (roomListStrings.length > 0 && !roomListStrings[0].equals("No rooms available")) {
+                roomListPanel.highlightRoom(selectedRoomIndex);
+            }
 
             add(mainPanel, BorderLayout.SOUTH);
         }else{
@@ -362,8 +367,18 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         timer.start();
     }
 
-    // Display the current selected room
-    JLabel selectedRoomLabel = new JLabel(roomListStrings[selectedRoomIndex]);
+    JLabel selectedRoomLabel = new JLabel("Select a room");
+
+    public void updateSelectedRoomLabel() {
+        if (roomListStrings.length > 0 && selectedRoomIndex >= 0 && selectedRoomIndex < roomListStrings.length) {
+            // Now it's safe to access roomListStrings[selectedRoomIndex]
+            selectedRoomLabel.setText(roomListStrings[selectedRoomIndex]);
+        } else {
+            // Either no rooms are available or selectedRoomIndex is out of bounds
+            selectedRoomLabel.setText("No rooms available");
+        }
+    }
+
 
     public class RoomListPanel extends JPanel {
         private String[] roomListStrings;
@@ -448,11 +463,14 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         }
                         socket.close(); // Close connection
 
-                        // Now, roomList contains all the rooms, and you can log it
-                        System.out.println("Received list of active rooms:");
-                        for (String room : roomList) {
-                            System.out.println(room);
+                        if (roomList.isEmpty()) {
+                            roomList.add("No rooms available");
                         }
+
+                        // Now, update roomListStrings and refresh UI accordingly
+                        //roomListStrings = roomList.toArray(new String[0]);
+                        System.out.println("roomList after creating new room" +roomList);
+                        updateRoomListUI();
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
@@ -557,6 +575,29 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     // bet - up and down arrow with bet balance
     // cash out
     // leave room
+
+    public void updateRoomListUI() {
+        // Remove existing RoomsListCenterPanel if present
+        if (roomListPanel != null) {
+            mainPanel.remove(roomListPanel);
+        }
+    
+        // Create a new RoomsListCenterPanel with updated roomListStrings
+        roomListPanel = new RoomsListCenterPanel();
+        mainPanel.add(roomListPanel, BorderLayout.NORTH);
+    
+        // Ensure that we don't try to highlight a room if "No rooms" is the only entry
+        if (roomListStrings.length > 0 && !roomListStrings[0].equals("No rooms available")) {
+            selectedRoomIndex = Math.max(0, Math.min(selectedRoomIndex, roomListStrings.length - 1)); // Ensure index is within bounds
+            roomListPanel.highlightRoom(selectedRoomIndex);
+        } else {
+            selectedRoomIndex = -1; // Indicates no selection is possible
+        }
+    
+        revalidate();
+        repaint();
+    }
+    
 
     public static void initializeUser() { //TODO: NOAH
         // Logic for creating user --> join the server through a socket connection
