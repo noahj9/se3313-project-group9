@@ -50,6 +50,7 @@ public:
     void placeUserBet(const std::string &userId, double betAmount);
     double getCurrentMultiplier() const;
     void removeUser(const std::string &userId);
+    void listAllUsers() const;
 };
 
 #endif

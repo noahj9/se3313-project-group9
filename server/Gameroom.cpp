@@ -223,6 +223,26 @@ void Gameroom::placeUserBet(const std::string &userId, double betAmount)
     }
 }
 
+// List all users in the gameroom
+void Gameroom::listAllUsers() const {
+    std::lock_guard<std::mutex> lock(usersMutex);
+    
+    if (globalUsers.empty()) {
+        std::cout << "There are no users in the game room." << std::endl;
+        return;
+    }
+    
+    std::cout << "Listing all users in the game room:" << std::endl;
+    for (const auto& pair : globalUsers) {
+        const auto& userId = pair.first;
+        const auto& user = pair.second;
+        std::cout << "User ID: " << userId 
+                  << ", Balance: $" << user.balance 
+                  << ", In Game: " << (user.inGame ? "Yes" : "No") 
+                  << std::endl;
+    }
+}
+
 // Retrieves the current game multiplier
 double Gameroom::getCurrentMultiplier() const
 {

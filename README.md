@@ -5,11 +5,13 @@
 
 Building the game:
 
-- g++ -std=c++17 -pthread SpacemanGame.cpp -o SpacemanGame
+- g++ -std=c++17 server.cpp Gameroom.cpp User.cpp Utils.cpp -o server.exe
+- g++ -std=c++17 -pthread userConnect.cpp -o userConnect
 
 Running the game:
 
-- ./SpacemanGame
+- ./server
+- ./userConnect
 
 This branch is currently working on implementing mutexes. Please run the below command to test:
 g++ -std=c++17 -pthread main.cpp User.cpp Gameroom.cpp Utils.cpp -o SecondSpacemanGame
