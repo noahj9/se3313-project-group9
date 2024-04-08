@@ -94,14 +94,14 @@ void Gameroom::cashoutForUser(std::string userId)
     // Safely access the globalUsers map to get the user's details
     std::lock_guard<std::mutex> usersLock(usersMutex);
     auto userIt = globalUsers.find(userId);
-    if(userIt == globalUsers.end())
+    if (userIt == globalUsers.end())
     {
         std::cerr << "User " << userId << " not found in global users." << std::endl;
         return;
     }
 
     // Calculate the amount won and update the user's balance
-    User& user = userIt->second; // Get a reference to the user to modify directly
+    User &user = userIt->second; // Get a reference to the user to modify directly
     double amountWon = user.betAmount * multiplier;
     user.balance += amountWon;
 
@@ -110,7 +110,6 @@ void Gameroom::cashoutForUser(std::string userId)
 
     std::cout << "User " << userId << " cashed out for a value of $" << amountWon << std::endl;
 }
-
 
 // Use this to check if a user is in a game
 bool Gameroom::anyUserInGame() const
@@ -127,6 +126,13 @@ void Gameroom::startGame()
         gameInProgress = true;
         multiplier = 1.0;
         stopRequested = false;
+
+        for (const auto &userId : clients)
+        {
+            int clientSocket = globalUsers[userId].socket;
+            send(clientSocket, "START_GAME", strlen("START_GAME"), 0);
+            std::cout << "Sent START_GAME message to user " << userId << "at client socket: " << clientSocket << std::endl;
+        }
 
         // Pass the member function and the object for which it will be called
         std::future<void> userInputHandler = std::async(std::launch::async, handleUserInput, std::ref(stopRequested), [this](std::string userId)
@@ -204,6 +210,13 @@ void Gameroom::endGame()
         }
     }
     gameInProgress = false;
+    for (const auto &userId : clients)
+    {
+        int clientSocket = globalUsers[userId].socket;
+        send(clientSocket, "END_GAME", strlen("END_GAME"), 0);
+        send(clientSocket, ("BALANCE " + std::to_string(globalUsers[userId].balance)).c_str(),
+             ("BALANCE " + std::to_string(globalUsers[userId].balance)).size(), 0);
+    }
     std::cout << "Game ended." << std::endl;
 }
 
