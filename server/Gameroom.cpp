@@ -24,9 +24,9 @@ extern std::mutex usersMutex;
 extern std::atomic<bool> stopRequested;
 
 // Constructor with parameter
-Gameroom::Gameroom() : multiplier(1.0), gameInProgress(false), name("") {}
-Gameroom::Gameroom(const std::string &roomName) : multiplier(1.0), gameInProgress(false), name(roomName) {}
-Gameroom::Gameroom(Gameroom &&other) : multiplier(1.0), gameInProgress(false), name(other.name), clients(other.clients) {}
+Gameroom::Gameroom() : gameInProgress(false), name("") {}
+Gameroom::Gameroom(const std::string &roomName) : gameInProgress(false), name(roomName) {}
+Gameroom::Gameroom(Gameroom &&other) : gameInProgress(false), name(other.name), clients(other.clients) {}
 
 // TODO: Change this to accept the client's BUTTON PRESS ("CASHOUT")
 // This function WAS to ensure a second thread was used to ensure the COMMAND LINE game could be played.
@@ -78,7 +78,7 @@ void Gameroom::removeClient(std::string userId)
     clients.erase(it);
 }
 
-void Gameroom::cashoutForUser(std::string userId)
+void Gameroom::cashoutForUser(std::string userId, double multiplier)
 {
     std::lock_guard<std::mutex> lock(gameMutex); // Lock for thread safety
 
@@ -109,6 +109,7 @@ void Gameroom::cashoutForUser(std::string userId)
     user.betAmount = 0;
 
     std::cout << "User " << userId << " cashed out for a value of $" << amountWon << std::endl;
+    std::cout << "User " << userId << " now has a total balance of $" << user.balance << std::endl;
 }
 
 // Use this to check if a user is in a game
@@ -124,30 +125,20 @@ void Gameroom::startGame()
     {
         std::cout << "Starting a new game... Type 'stop <userID>' to secure your bet at the current multiplier." << std::endl;
         gameInProgress = true;
-        multiplier = 1.0;
         stopRequested = false;
 
         for (const auto &userId : clients)
         {
             int clientSocket = globalUsers[userId].socket;
+
+            // TODO: Chris, please accept this on the frontend **
             send(clientSocket, "START_GAME", strlen("START_GAME"), 0);
             std::cout << "Sent START_GAME message to user " << userId << "at client socket: " << clientSocket << std::endl;
         }
 
-        // Pass the member function and the object for which it will be called
-        std::future<void> userInputHandler = std::async(std::launch::async, handleUserInput, std::ref(stopRequested), [this](std::string userId)
-                                                        { this->userStops(userId); });
-
         // Game loop starts here
         while (gameInProgress)
         {
-            std::this_thread::sleep_for(std::chrono::seconds(1));           // Simulate time passing
-            multiplier += 0.1;                                              // Increment the multiplier over time
-            std::cout << "Current multiplier: " << multiplier << std::endl; // Display the current multiplier
-
-            // The game continues running here. Since std::getline is blocking, we removed it from this loop.
-            // The handling of 'stop' commands is done asynchronously in handleUserInput.
-
             if ((rand() % 100) < 5)
             {              // There's a random chance to end the game
                 endGame(); // End the game if the random condition is met
@@ -156,44 +147,7 @@ void Gameroom::startGame()
         }
 
         stopRequested = true;   // Signal the user input thread to stop
-        userInputHandler.get(); // Wait for the user input handling thread to finish
-
         gameInProgress = false; // Mark the game as no longer in progress
-    }
-    else
-    {
-        if (gameInProgress)
-        {
-            std::cout << "Cannot start a new game. A game is already in progress." << std::endl;
-        }
-        else
-        {
-            std::cout << "Cannot start a new game. No globalUsers are ready." << std::endl;
-        }
-    }
-}
-
-// THIS TO THE CASHOUT FUNCTION **
-// TODO: When the user clicks the cashout button, this function is called
-void Gameroom::userStops(const std::string &userId)
-{
-    std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    auto it = globalUsers.find(userId);
-    if (it != globalUsers.end() && it->second.inGame)
-    {
-        // User decides to stop, calculate their earnings based on the current multiplier
-        double earnings = roundDown(it->second.betAmount * multiplier);
-        it->second.balance = roundDown(it->second.balance + earnings);
-        it->second.reset(); // Reset user's game state
-        std::cout << "User " << userId << " stopped and secured " << earnings << std::endl;
-    }
-    else if (it == globalUsers.end())
-    {
-        std::cout << "User " << userId << " not found." << std::endl;
-    }
-    else
-    {
-        std::cout << "User " << userId << " is not currently in a game." << std::endl;
     }
 }
 
@@ -205,7 +159,6 @@ void Gameroom::endGame()
     {
         if (user.inGame)
         {
-            // user.balance += user.betAmount * multiplier; // Update balance based on final multiplier
             user.reset(); // Reset user state for the next game
         }
     }
@@ -213,6 +166,7 @@ void Gameroom::endGame()
     for (const auto &userId : clients)
     {
         int clientSocket = globalUsers[userId].socket;
+        // TODO: Chris, please accept this on the frontend **
         send(clientSocket, "END_GAME", strlen("END_GAME"), 0);
         send(clientSocket, ("BALANCE " + std::to_string(globalUsers[userId].balance)).c_str(),
              ("BALANCE " + std::to_string(globalUsers[userId].balance)).size(), 0);
@@ -289,10 +243,4 @@ void Gameroom::listAllUsers() const
                   << ", In Game: " << (user.inGame ? "Yes" : "No")
                   << std::endl;
     }
-}
-
-// Retrieves the current game multiplier
-double Gameroom::getCurrentMultiplier() const
-{
-    return multiplier;
 }

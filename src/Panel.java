@@ -215,7 +215,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
 
-                        String request = "CASHOUT " + roomNumber + " " + userId;
+                        String request = "CASHOUT " + roomNumber + " " + userId + " " + multiplier.getMultiplier();
                         outputStream.write(request.getBytes());
 
                         socket.close(); // Close connection
@@ -310,7 +310,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         add(mainPanel, BorderLayout.SOUTH);
         revalidate();
         repaint();
-
+        
+        multiplier.resetMultiplier();
     }
     public void getGameRoomPanel(){
         mainPanel.remove(leftPanel);

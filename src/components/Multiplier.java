@@ -33,8 +33,12 @@ public class Multiplier extends JPanel {
         return multiplier;
     }
 
+    public void resetMultiplier(){
+        multiplier = 1.0;
+    }
+
     private void updateMultiplier() {
-        multiplier+=0.01;
+        multiplier+=0.1;
         if (Math.random() < 0.005) {
             timer.stop();
             fireMultiplierStoppedEvent();

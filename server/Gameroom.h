@@ -13,7 +13,6 @@
 class Gameroom
 {
 private:
-    double multiplier;            // Current game multiplier
     bool gameInProgress;          // Flag to check if a game is currently in progress
     std::mutex gameMutex;         // Mutex for synchronizing access to game state
 
@@ -44,14 +43,13 @@ public:
     // Method declarations
     void acceptClient(std::string userId);
     void removeClient(std::string userId);
-    void cashoutForUser(std::string userId);
+    void cashoutForUser(std::string userId, double multiplier);
     bool anyUserInGame() const;
     void startGame();
     void userStops(const std::string &userId);
     void endGame();
     bool isGameInProgress() const;
     void placeUserBet(const std::string &userId, double betAmount);
-    double getCurrentMultiplier() const;
     void listAllUsers() const;
 };
 

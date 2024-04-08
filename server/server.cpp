@@ -82,7 +82,7 @@ void joinGameRoom(std::string roomName, std::string userId)
     }
 }
 
-void cashout(std::string roomName, std::string userId)
+void cashout(std::string roomName, std::string userId, std::string multiplier)
 {
     // find a room based on its name
     std::lock_guard<std::mutex> lock(gameRoomsMutex);
@@ -90,7 +90,7 @@ void cashout(std::string roomName, std::string userId)
     {
         if (room.name == roomName)
         {
-            room.cashoutForUser(userId);
+            room.cashoutForUser(userId, std::stod(multiplier));
             return;
         }
     }
@@ -155,6 +155,7 @@ void createGameRoom(std::string userId)
         if (room.name == roomName)
         {
             room.startGame();
+            std::cout << "Game started in room: " << roomName << std::endl;
             break;
         }
     }
@@ -198,13 +199,15 @@ void handleClient(std::string userId)
         else if (request.find("CASHOUT") == 0)
         {
             size_t pos = request.find(" ");
-            size_t nextSpacePos = request.find(" ", pos + 1);
+            size_t firstSpacePos = request.find(" ", pos + 1);
+            size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
 
-            if (pos != std::string::npos && nextSpacePos != std::string::npos)
+            if (pos != std::string::npos && firstSpacePos != std::string::npos && secondSpacePos != std::string::npos)
             {
-                std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
-                std::string userId = request.substr(nextSpacePos + 1);
-                cashout(roomName, userId); // Pass the client socket
+                std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
+                std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
+                std::string multiplier = request.substr(secondSpacePos + 1);
+                cashout(roomName, userId, multiplier); // Pass the client socket
             }
         }
         else if (request.find("BET") == 0)
@@ -212,8 +215,9 @@ void handleClient(std::string userId)
             size_t pos = request.find(" ");
             size_t firstSpacePos = request.find(" ", pos + 1);
             size_t secondSpacePos = request.find(" ", firstSpacePos + 1);
+            size_t thirdSpacePos = request.find(" ", secondSpacePos + 1);
 
-            if (pos != std::string::npos && firstSpacePos != std::string::npos)
+            if (pos != std::string::npos && firstSpacePos != std::string::npos && secondSpacePos != std::string::npos)
             {
                 std::string roomName = request.substr(pos + 1, firstSpacePos - pos - 1);
                 std::string userId = request.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
