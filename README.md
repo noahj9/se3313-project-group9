@@ -5,12 +5,15 @@
 
 Building the game:
 
-- g++ -std=c++17 server.cpp Gameroom.cpp User.cpp Utils.cpp -o server.exe
+- g++ -std=c++17 server.cpp Gameroom.cpp User.cpp Utils.cpp -o server
+
+<!-- For testing only -->
 - g++ -std=c++17 -pthread userConnect.cpp -o userConnect
 
 Running the game:
 
 - ./server
+<!-- For testing only -->
 - ./userConnect
 
 This branch is currently working on implementing mutexes. Please run the below command to test:

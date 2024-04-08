@@ -15,6 +15,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     private RightPanel rightPanel;
     private CenterPanel centerPanel;
 
+    public String userId;
+    public String roomNumber;
+
     public Panel() {
         setLayout(new BorderLayout());
         countdownPanel = new CountdownPanel();
