@@ -34,6 +34,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public boolean gameStarted;
     public boolean userJoinedRound;
     public boolean cashoutPressed = false;
+    private Thread listenerThread;
 
     public static String userId = "";
     public String roomNumber = "";
@@ -112,17 +113,17 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     System.out.println("Leave Room");
                     leaveRoom();
                     updateStatus();
+                    try {
+                        Socket socket = new Socket("127.0.0.1", 2003);
+                        OutputStream outputStream = socket.getOutputStream();
 
-                    // try {
-                    //     Socket socket = new Socket("127.0.0.1", 2003);
-                    //     OutputStream outputStream = socket.getOutputStream();
-
-                    //     String request = "LEAVE_ROOM";
-                    //     outputStream.write(request.getBytes());
-                    //     socket.close();
-                    // } catch (IOException ex) {
-                    //     ex.printStackTrace();
-                    // }
+                        String request = "LEAVE_ROOM";
+                        outputStream.write(request.getBytes());
+                        listenerThread.interrupt();
+                        socket.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             });
             add(newGameButton, leftConstraints);
@@ -393,7 +394,6 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     }
 
 
-    // TODO: @Tjin
     public void multiplierStopped() {
         System.out.println("Multiplier stopped called");
         gameInProgress = false;
@@ -669,7 +669,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                         outputStream.write(request.getBytes());
 
                         ServerListener listener = new ServerListener(socket);
-                        Thread listenerThread = new Thread(listener);
+                        listenerThread = new Thread(listener);
                         listenerThread.start();
                     } catch (IOException ex) {
                         ex.printStackTrace();

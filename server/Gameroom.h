@@ -34,7 +34,7 @@ public:
 
     // Move assignment operator
     // Gameroom& operator=(Gameroom&& other) noexcept;
-    Gameroom &operator=(Gameroom &&other); // TODO: TRISTAN what is this
+    Gameroom &operator=(Gameroom &&other);
 
     // Deleting the copy constructor and copy assignment operator
     Gameroom(const Gameroom &) = delete;
