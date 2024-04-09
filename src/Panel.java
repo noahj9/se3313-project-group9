@@ -32,6 +32,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public boolean countdownFunctionCalled = false;
     public boolean multiplierCalled = false;
     public boolean gameStarted;
+    public boolean userJoinedRound;
+    public boolean cashoutPressed = false;
 
     public static String userId = "";
     public String roomNumber = "";
@@ -41,7 +43,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public static int SERVER_PORT = 2003;
 
     public int betAmount = 0;
-    public int cashAmount = 10;
+    public double cashAmount = 10;
+    public boolean gameInProgress = false;
 
     public Panel() {
         setLayout(new BorderLayout());
@@ -56,6 +59,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         gamePanel.add(player);
         multiplier = new Multiplier();
         multiplier.setIsStopped(true);
+        userJoinedRound = false;
+        gameInProgress=false;
+        cashoutPressed = false;
         countdownPanel = new CountdownPanel();
         if(roomNumber.length()==0){
             leftPanel = new LeftPanel();
@@ -150,22 +156,23 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             placeBetButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // Place bet
-                    System.out.println("Bet Placed");
-
-                    try {
-                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-                        OutputStream outputStream = socket.getOutputStream();
-
-                        String request = "BET " + roomNumber + " " + userId + " " + betAmount;
-                        outputStream.write(request.getBytes());
-
-                        socket.close(); // Close connection
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
+                    if (!gameInProgress && gameStarted) {
+                        System.out.println("Bet Placed");
+                        
+                        try {
+                            Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                            OutputStream outputStream = socket.getOutputStream();
+    
+                            String request = "BET " + roomNumber + " " + userId + " " + betAmount;
+                            outputStream.write(request.getBytes());
+    
+                            socket.close(); // Close connection
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+    
+                        removeBetButtons();
                     }
-
-                    removeBetButtons();
                 }
             });
             centerConstraints.gridy = 1;
@@ -214,6 +221,11 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         public void updateBetLabel(int newBetAmount) {
             betAmount = newBetAmount;
             betLabel.setText("$" + betAmount);
+        }
+
+        public void updateCashLabel(double newCashAmount) {
+            cashAmount = newCashAmount;
+            cashLabel.setText("$" + cashAmount);
         }
     }
 
@@ -291,10 +303,21 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             // Display a message or handle the situation when the bet amount goes below 0
             System.out.println("Invalid bet amount");
         }
-    }    
+    }
+
+    public void updateCashAmount(double newCashAmount) {
+        if (newCashAmount >= 0) {
+            cashAmount = newCashAmount;
+            gRoomRightPanel.updateCashLabel(cashAmount);
+        } else {
+            // Display a message or handle the situation when the bet amount goes below 0
+            System.out.println("Invalid bet amount");
+        }
+    }
 
     public void removeBetButtons(){
         System.out.println("Remove Bet Buttons called");
+        userJoinedRound = true;
         mainPanel.remove(gRoomRightPanel);
         mainPanel.remove(gRoomCentralPanel);
         mainPanel.remove(gRoomLeftPanel);
@@ -303,16 +326,25 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         revalidate();
         repaint();
     }
+    public void removeBetButtonsNoCashout(){
+        System.out.println("Remove Bet Buttons called no cashout");
+        mainPanel.remove(gRoomRightPanel);
+        mainPanel.remove(gRoomCentralPanel);
+        mainPanel.remove(gRoomLeftPanel);
+        revalidate();
+        repaint();
+    }
     public void removeCashOut(){
         System.out.println("Cashout called");
         mainPanel.remove(cashoutCenterPanel);
-        gRoomLeftPanel = new GameRoomLeftPanel();
-        gRoomCentralPanel = new GameRoomCenterPanel();
-        gRoomRightPanel = new GameRoomRightPanel();
+        cashoutPressed = true;
+        // gRoomLeftPanel = new GameRoomLeftPanel();
+        // gRoomCentralPanel = new GameRoomCenterPanel();
+        // gRoomRightPanel = new GameRoomRightPanel();
         
-        mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
-        mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
-        mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
+        // mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
+        // mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        // mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
 
         add(mainPanel, BorderLayout.SOUTH);
         revalidate();
@@ -355,7 +387,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
         mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
         add(gamePanel, BorderLayout.CENTER);
-        add(mainPanel, BorderLayout.SOUTH);
+        // add(mainPanel, BorderLayout.SOUTH);
         revalidate();
         repaint();
     }
@@ -364,12 +396,21 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     // TODO: @Tjin
     public void multiplierStopped() {
         System.out.println("Multiplier stopped called");
+        gameInProgress = false;
         if (gameStarted){
             multiplier.setIsStopped(true);
             // Add the explosion, remove the player
             multiplier.resetMultiplier();
             System.out.println("Explosion here");
             gamePanel.remove(player);
+            if(userJoinedRound && !cashoutPressed){
+                mainPanel.remove(cashoutCenterPanel);
+                add(mainPanel, BorderLayout.SOUTH);
+                revalidate();
+                repaint();
+                //Remover cashout
+            }
+            cashoutPressed = false;
                 // explosion = new Explosion();
                 // gamePanel.add(explosion);
                 // mainPanel.add(gamePanel, BorderLayout.NORTH);
@@ -389,6 +430,12 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             // timer.setRepeats(false);
             // timer.start();
         }
+        mainPanel.add(gRoomLeftPanel, BorderLayout.WEST);
+        mainPanel.add(gRoomCentralPanel, BorderLayout.CENTER);
+        mainPanel.add(gRoomRightPanel, BorderLayout.EAST);
+
+        mainPanel.revalidate();
+        mainPanel.repaint();
     }
     public void resetCountdown(){
         if (gameStarted){
@@ -397,19 +444,23 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         
     }
     public void startGame() {
-        System.out.println("Showing Player");
+
+        multiplier.resetMultiplier();
         if (gameStarted == true) {
             gamePanel.remove(countdownPanel);
             gamePanel.revalidate();
             gamePanel.repaint();
         }
         gameStarted = true;
+        gameInProgress = true;
+        removeBetButtonsNoCashout();
         multiplier.setIsStopped(false);
         gamePanel.add(player, BorderLayout.CENTER);
         gamePanel.add(multiplier, BorderLayout.NORTH);
         gamePanel.revalidate();
         gamePanel.repaint();
         System.out.println("Added game panel");
+
     }
 
     JLabel selectedRoomLabel = new JLabel("Select a room");
@@ -687,6 +738,10 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 String[] parts = message.split(" ");
                 if (parts.length > 1) {
                     String balance = parts[1];
+                    cashAmount = Double.parseDouble(balance);
+                    betAmount = 1;
+                    updateCashAmount(cashAmount);
+                    updateBetAmount(betAmount);
                     System.out.println("Balance updated: " + balance);
                 }
             }

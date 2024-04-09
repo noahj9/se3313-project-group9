@@ -20,13 +20,6 @@ public class Multiplier extends JPanel {
         multiplierLabel.setHorizontalAlignment(JLabel.CENTER);
         multiplierLabel.setFont(new Font("Arial", Font.BOLD, 24));
         add(multiplierLabel, BorderLayout.CENTER);
-        timer = new Timer(initialDelay, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateMultiplier();
-            }
-        });
-        timer.start();
     }
 
     public double getMultiplier(){
@@ -34,18 +27,24 @@ public class Multiplier extends JPanel {
     }
 
     public void resetMultiplier(){
-        multiplier = 1.0;
-        speedIncrease = 0.95;
-        multiplierLabel.setText("Multiplier: " + String.format("%.2fx", multiplier));
-        isStopped = true;
-        timer = null;
-        timer = new Timer(initialDelay, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateMultiplier();
+            multiplier = 1.0;
+            speedIncrease = 0.95;
+            multiplierLabel.setText("Multiplier: " + String.format("%.2fx", multiplier));
+            isStopped = true;
+            
+            // Stop the previous timer if it exists
+            if (timer != null) {
+                timer.stop();
             }
-        });
-        timer.start();
+            
+            // Create a new timer
+            timer = new Timer(initialDelay, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    updateMultiplier();
+                }
+            });
+            timer.start();
     }
 
     public void setIsStopped(boolean isStopped){
