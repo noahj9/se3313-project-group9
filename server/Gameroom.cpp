@@ -7,6 +7,7 @@
 #include <cstring> // For memset
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -159,12 +160,14 @@ void Gameroom::gameCaller()
     gameCaller();
 }
 
-// Ends the current game, calculating and updating user balances
 void Gameroom::endGame()
 {
     std::lock_guard<std::mutex> lock(usersMutex); // Lock for thread safety
-    for (auto &[id, user] : globalUsers)
+    for (auto it = globalUsers.begin(); it != globalUsers.end(); ++it)
     {
+        auto &id = it->first;
+        auto &user = it->second;
+
         if (user.inGame)
         {
             user.reset(); // Reset user state for the next game
