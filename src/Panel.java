@@ -40,7 +40,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public String roomNumber = "";
     public int selectedRoomIndex = 0;
     public String roomListStrings[] = {};
-    public static String SERVER_ADDRESS = "3.88.12.145";
+    // public static String SERVER_ADDRESS = "3.88.12.145";
+    public static String SERVER_ADDRESS = "127.0.0.1";
     public static int SERVER_PORT = 2003;
 
     public int betAmount = 0;
@@ -157,7 +158,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             placeBetButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (!gameInProgress && gameStarted) {
+                    System.out.println("Bet button pressed");
+                    if (!gameInProgress) {
                         System.out.println("Bet Placed");
                         
                         try {
@@ -697,11 +699,11 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         public void run() {
             try {
                 InputStream inputStream = socket.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                byte[] buffer = new byte[1024];
+                int bytesRead;
 
-                while (running) {
-                    String message = reader.readLine(); // Read until newline delimiter
-                    System.out.println("Received message from server: " + message);
+                while (running && (bytesRead = inputStream.read(buffer)) != -1) {
+                    String message = new String(buffer, 0, bytesRead);
                     if (message != null) {
                         handleServerMessage(message);
                     }
@@ -719,6 +721,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
 
         private void handleServerMessage(String message) {
             if (message.startsWith("START_GAME")) {
+                System.out.println("START_GAME received");
                 SwingUtilities.invokeLater(() -> {
                     System.out.println("START_GAME CALLED");
                     // if (gameInitialized) {
