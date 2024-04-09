@@ -30,6 +30,16 @@ int numberOfUsers = 0;
 // Mutex for synchronizing access to activeGameRooms
 std::mutex gameRoomsMutex;
 
+void printActiveThreads() // log all active threasds
+{
+    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    std::cout << "Active Threads:" << std::endl;
+    for (const auto &thread : activeGameRooms)
+    {
+        std::cout << "Thread ID: " << thread.name << std::endl;
+    }
+}
+
 std::string initializeUser(int clientSocket)
 {
     std::lock_guard<std::mutex> lock(usersMutex);
@@ -143,10 +153,10 @@ void gameRoomThread(Gameroom &room)
 
 void createGameRoom(std::string userId)
 {
-    int clientSocket = globalUsers[userId].socket; // must figure out how to get the socket from this
-
     // Create a new gameroom and add it to the list of active gamerooms
-    std::lock_guard<std::mutex> lock(gameRoomsMutex);
+    printActiveThreads();
+    std::lock_guard<std::mutex>
+        lock(gameRoomsMutex);
     std::string roomName = "Room_" + std::to_string(roomCounter++);
     activeGameRooms.emplace_back(roomName);
 

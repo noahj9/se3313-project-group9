@@ -114,6 +114,7 @@ bool Gameroom::anyUserInGame() const
 // Starts a new game, resetting necessary components and starting the multiplier increase
 void Gameroom::startGame()
 {
+    std::cout << gameInProgress << " " << anyUserInGame() << std::endl;
     if (!gameInProgress && anyUserInGame())
     {
         std::cout << "Starting a new game..." << std::endl;
