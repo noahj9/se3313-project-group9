@@ -50,7 +50,8 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
 
         // Initialize roomListStrings with at least one value to avoid ArrayIndexOutOfBoundsException
         roomListStrings = new String[] {"No rooms available"};
-      
+        gamePanel = new JPanel();
+        gamePanel.setLayout(new BoxLayout(gamePanel, BoxLayout.X_AXIS));
         if(roomNumber.length()==0){
             leftPanel = new LeftPanel();
             rightPanel = new RightPanel();
@@ -355,12 +356,12 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
             multiplier.setIsStopped(true);
             // Add the explosion, remove the player
             Timer timer2 = new Timer(100, e -> {
-                gamePanel.remove(player);
+                mainPanel.remove(player);
                 explosion = new Explosion();
-                gamePanel.add(explosion, BorderLayout.CENTER);
-                add(gamePanel, BorderLayout.NORTH);
-                revalidate();
-                repaint();
+                gamePanel.add(explosion);
+                mainPanel.add(gamePanel, BorderLayout.NORTH);
+                mainPanel.revalidate();
+                mainPanel.repaint();
             });
             timer2.setRepeats(false);
             timer2.start();
@@ -370,15 +371,15 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     }
     public void resetCountdown(){
         Timer timer = new Timer(10000, e -> {
-            gamePanel.remove(explosion);
-            gamePanel.remove(multiplier);
+            mainPanel.remove(explosion);
+            mainPanel.remove(multiplier);
             countdownPanel = new CountdownPanel();
             countdownPanel.addCountdownListener(this);
             countdownPanel.resetTime();
-            gamePanel.add(countdownPanel, BorderLayout.NORTH);
-            add(gamePanel, BorderLayout.NORTH);
-            revalidate();
-            repaint();
+            gamePanel.add(countdownPanel);
+            mainPanel.add(gamePanel, BorderLayout.NORTH);
+            mainPanel.revalidate();
+            mainPanel.repaint();
         });
         multiplier.resetMultiplier();
         timer.setRepeats(false);
@@ -387,22 +388,21 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public void startGame() {
         player = new Player();
         multiplier = new Multiplier();
-        gamePanel = new JPanel(new BorderLayout());
         for(int i=0; i<50; i++){
         }
         multiplier.setIsStopped(false);
         System.out.println("in countdown function");
         if (gameStarted) {
-            gamePanel.remove(countdownPanel);
+            mainPanel.remove(countdownPanel);
         } else {
             gameStarted = true;
         }
         multiplier.addMultiplierListener(this);
-        gamePanel.add(multiplier, BorderLayout.NORTH);
-        gamePanel.add(player, BorderLayout.CENTER);
-        add(gamePanel, BorderLayout.NORTH);
-        revalidate();
-        repaint();
+        gamePanel.add(multiplier);
+        gamePanel.add(player);
+        mainPanel.add(gamePanel, BorderLayout.NORTH);
+        mainPanel.revalidate();
+        mainPanel.repaint();
         System.out.println("Added game panel");
     }
 
