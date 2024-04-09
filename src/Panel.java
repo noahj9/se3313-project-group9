@@ -744,6 +744,9 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     updateBetAmount(betAmount);
                     System.out.println("Balance updated: " + balance);
                 }
+            } else if (message.startsWith("SHUTDOWN")) {
+                // Extract and update balance
+                System.exit(0);
             }
         }
 
