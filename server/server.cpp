@@ -281,6 +281,8 @@ void acceptClients(int serverSocket)
         {
             if (!serverRunning)
             {
+                std::string msg = "SHUTDOWN";
+                send(clientSocket, msg.c_str(), msg.length(), 0);
                 std::cerr << "Server shutting down." << std::endl;
                 break; // Exit loop if server is stopping
             }
