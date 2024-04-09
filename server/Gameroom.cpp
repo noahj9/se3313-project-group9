@@ -178,10 +178,12 @@ void Gameroom::endGame()
     {
         int clientSocket = globalUsers[userId].socket;
         send(clientSocket, "END_GAME\n", strlen("END_GAME\n"), 0);
+        sleep(1);
         send(clientSocket, ("BALANCE " + std::to_string(globalUsers[userId].balance) + "\n").c_str(),
              ("BALANCE " + std::to_string(globalUsers[userId].balance) + "\n").size(), 0);
     }
-    std::cout << "Game ended." << std::endl;
+    std::cout << "Game ended.\n"
+              << std::endl;
 }
 
 // Returns whether a game is currently in progress

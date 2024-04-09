@@ -114,7 +114,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                     leaveRoom();
                     updateStatus();
                     try {
-                        Socket socket = new Socket("127.0.0.1", 2003);
+                        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
 
                         String request = "LEAVE_ROOM";
@@ -697,16 +697,13 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         public void run() {
             try {
                 InputStream inputStream = socket.getInputStream();
-                byte[] buffer = new byte[1024];
-                int bytesRead;
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
                 while (running) {
                     String message = reader.readLine(); // Read until newline delimiter
+                    System.out.println("Received message from server: " + message);
                     if (message != null) {
                         handleServerMessage(message);
-                    } else {
-                        // Handle end of stream or error
-                        break;
                     }
                 }
             } catch (IOException e) {
