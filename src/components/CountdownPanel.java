@@ -24,30 +24,33 @@ public class CountdownPanel extends JPanel {
                 countdownLabel.setText("Enter the Round. Closes in: " + time +"s");
                 time--;
 
-                if (time < 0) {
-                    ((Timer) e.getSource()).stop();
-                    countdownLabel.setText("Round Closed");
-                    // fireCountdownFinishedEvent();
-                }
+                // if (time < 0) {
+                //     ((Timer) e.getSource()).stop();
+                //     countdownLabel.setText("Round Closed");
+                //     // fireCountdownFinishedEvent();
+                // }
             }
         });
         timer.start();
+    }
+    public void resetTime(){
+        time = 10;
     }
     public int getTime() {
         return time;
     }
 
-    public void addCountdownListener(CountdownListener listener) {
-        this.countdownListener = listener;
-    }
+    // public void addCountdownListener(CountdownListener listener) {
+    //     this.countdownListener = listener;
+    // }
 
-    private void fireCountdownFinishedEvent() {
-        if (countdownListener != null) {
-            countdownListener.countdownFinished();
-        }
-    }
+    // private void fireCountdownFinishedEvent() {
+    //     if (countdownListener != null) {
+    //         countdownListener.countdownFinished();
+    //     }
+    // }
 
-    public interface CountdownListener {
-        void countdownFinished();
-    }
+    // public interface CountdownListener {
+    //     void countdownFinished();
+    // }
 }
