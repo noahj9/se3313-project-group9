@@ -39,7 +39,7 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
     public String roomNumber = "";
     public int selectedRoomIndex = 0;
     public String roomListStrings[] = {};
-    public static String SERVER_ADDRESS = "127.0.0.1";
+    public static String SERVER_ADDRESS = "3.88.12.145";
     public static int SERVER_PORT = 2003;
 
     public int betAmount = 0;
