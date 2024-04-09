@@ -366,8 +366,10 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
         }
     }
 
+    // TODO: @Tjin
     public void multiplierStopped() {
         if (!multiplierCalled && gameStarted){
+            countdownFinished();
             countdownFunctionCalled = false;
             Timer timer2 = new Timer(100, e -> {
                 gamePanel.remove(player);

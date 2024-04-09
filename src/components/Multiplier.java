@@ -37,15 +37,11 @@ public class Multiplier extends JPanel {
         multiplier = 1.0;
     }
 
+    // TODO: @Tjin
     private void updateMultiplier() {
         multiplier+=0.1;
-        if (Math.random() < 0.005) {
-            timer.stop();
-            fireMultiplierStoppedEvent();
-        } else {
-            int newDelay = (int) (timer.getDelay() * speedIncrease);
-            timer.setDelay(newDelay);
-        }
+        int newDelay = (int) (timer.getDelay() * speedIncrease);
+        timer.setDelay(newDelay);
         multiplierLabel.setText("Multiplier: " + String.format("%.2fx", multiplier));
     }
     public void addMultiplierListener(MultiplierListener listener) {
