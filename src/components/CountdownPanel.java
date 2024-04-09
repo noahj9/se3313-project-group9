@@ -7,7 +7,7 @@ import java.awt.event.ActionListener;
 public class CountdownPanel extends JPanel {
     private JLabel countdownLabel;
     private int time;
-    // private CountdownListener countdownListener;
+    private CountdownListener countdownListener;
     public CountdownPanel() {
         setLayout(new BorderLayout());
 
@@ -40,17 +40,17 @@ public class CountdownPanel extends JPanel {
         return time;
     }
 
-    // public void addCountdownListener(CountdownListener listener) {
-    //     this.countdownListener = listener;
-    // }
+    public void addCountdownListener(CountdownListener listener) {
+        this.countdownListener = listener;
+    }
 
-    // private void fireCountdownFinishedEvent() {
-    //     if (countdownListener != null) {
-    //         countdownListener.countdownFinished();
-    //     }
-    // }
+    private void fireCountdownFinishedEvent() {
+        if (countdownListener != null) {
+            countdownListener.resetCountdown();
+        }
+    }
 
-    // public interface CountdownListener {
-    //     void countdownFinished();
-    // }
+    public interface CountdownListener {
+        void resetCountdown();
+    }
 }

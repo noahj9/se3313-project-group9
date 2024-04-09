@@ -12,7 +12,7 @@ import java.awt.List;
 import java.util.concurrent.TimeUnit;
 import javax.swing.Timer;
 
-public class Panel extends JPanel implements Multiplier.MultiplierListener {
+public class Panel extends JPanel implements CountdownPanel.CountdownListener, Multiplier.MultiplierListener {
     public CountdownPanel countdownPanel;
     public Multiplier multiplier;
     public Player player;
@@ -365,27 +365,31 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
             timer2.setRepeats(false);
             timer2.start();
             // Remove the explosion & multiplier, add the countdown panel
-            Timer timer = new Timer(10000, e -> {
-                gamePanel.remove(explosion);
-                gamePanel.remove(multiplier);
-                countdownPanel = new CountdownPanel();
-                // countdownPanel.resetTime();
-                gamePanel.add(countdownPanel, BorderLayout.NORTH);
-                add(gamePanel, BorderLayout.NORTH);
-                revalidate();
-                repaint();
-            });
-            multiplier.resetMultiplier();
-            timer.setRepeats(false);
-            timer.start();
+            resetCountdown();
         } 
     }
-    
+    public void resetCountdown(){
+        Timer timer = new Timer(10000, e -> {
+            gamePanel.remove(explosion);
+            gamePanel.remove(multiplier);
+            countdownPanel = new CountdownPanel();
+            countdownPanel.addCountdownListener(this);
+            countdownPanel.resetTime();
+            gamePanel.add(countdownPanel, BorderLayout.NORTH);
+            add(gamePanel, BorderLayout.NORTH);
+            revalidate();
+            repaint();
+        });
+        multiplier.resetMultiplier();
+        timer.setRepeats(false);
+        timer.start();
+    }
     public void startGame() {
         player = new Player();
         multiplier = new Multiplier();
         gamePanel = new JPanel(new BorderLayout());
-
+        for(int i=0; i<50; i++){
+        }
         multiplier.setIsStopped(false);
         System.out.println("in countdown function");
         if (gameStarted) {
@@ -393,7 +397,7 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
         } else {
             gameStarted = true;
         }
-        // multiplier.addMultiplierListener(this);
+        multiplier.addMultiplierListener(this);
         gamePanel.add(multiplier, BorderLayout.NORTH);
         gamePanel.add(player, BorderLayout.CENTER);
         add(gamePanel, BorderLayout.NORTH);
@@ -671,7 +675,7 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
             } else if (message.startsWith("END_GAME")) {
                 // Handle END_GAME
                 System.out.println("Game ended.");
-                multiplierStopped();
+                resetCountdown();
             } else if (message.startsWith("BALANCE")) {
                 // Extract and update balance
                 String[] parts = message.split(" ");
