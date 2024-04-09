@@ -177,12 +177,12 @@ void Gameroom::endGame()
     for (const auto &userId : clients)
     {
         int clientSocket = globalUsers[userId].socket;
-        send(clientSocket, "END_GAME\n", strlen("END_GAME\n"), 0);
+        send(clientSocket, "END_GAME", strlen("END_GAME"), 0);
         sleep(1);
-        send(clientSocket, ("BALANCE " + std::to_string(globalUsers[userId].balance) + "\n").c_str(),
-             ("BALANCE " + std::to_string(globalUsers[userId].balance) + "\n").size(), 0);
+        send(clientSocket, ("BALANCE " + std::to_string(globalUsers[userId].balance)).c_str(),
+             ("BALANCE " + std::to_string(globalUsers[userId].balance)).size(), 0);
     }
-    std::cout << "Game ended.\n"
+    std::cout << "Game ended."
               << std::endl;
 }
 
