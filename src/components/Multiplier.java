@@ -11,6 +11,7 @@ public class Multiplier extends JPanel {
     private int initialDelay = 1000;
     private double speedIncrease = 0.95;
     private MultiplierListener multiplierListener;
+    private boolean isStopped = false;
 
     public Multiplier() {
         setLayout(new BorderLayout());
@@ -35,14 +36,22 @@ public class Multiplier extends JPanel {
 
     public void resetMultiplier(){
         multiplier = 1.0;
+        speedIncrease = 0.95;
+        isStopped = true;
+    }
+
+    public void setIsStopped(boolean isStopped){
+        this.isStopped = isStopped;
     }
 
     // TODO: @Tjin
     private void updateMultiplier() {
-        multiplier+=0.1;
-        int newDelay = (int) (timer.getDelay() * speedIncrease);
-        timer.setDelay(newDelay);
-        multiplierLabel.setText("Multiplier: " + String.format("%.2fx", multiplier));
+        if (!isStopped) {
+            multiplier+=0.1;
+            int newDelay = (int) (timer.getDelay() * speedIncrease);
+            timer.setDelay(newDelay);
+            multiplierLabel.setText("Multiplier: " + String.format("%.2fx", multiplier));
+        }
     }
     public void addMultiplierListener(MultiplierListener listener) {
         this.multiplierListener = listener;

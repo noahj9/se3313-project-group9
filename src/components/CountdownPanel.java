@@ -27,7 +27,7 @@ public class CountdownPanel extends JPanel {
                 if (time < 0) {
                     ((Timer) e.getSource()).stop();
                     countdownLabel.setText("Round Closed");
-                    fireCountdownFinishedEvent();
+                    // fireCountdownFinishedEvent();
                 }
             }
         });

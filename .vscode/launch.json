@@ -9,6 +9,13 @@
             "name": "Panel",
             "request": "launch",
             "mainClass": "Panel",
+            "projectName": "se3313-project-group9_98e28cc4"
+        },
+        {
+            "type": "java",
+            "name": "Panel",
+            "request": "launch",
+            "mainClass": "Panel",
             "projectName": "se3313-project-group9_56f30221"
         }
     ]

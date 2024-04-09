@@ -129,7 +129,7 @@ void Gameroom::startGame()
 
             // TODO: Chris, please accept this on the frontend **
             send(clientSocket, "START_GAME", strlen("START_GAME"), 0);
-            std::cout << "Sent START_GAME message to user " << userId << " at client socket: " << clientSocket << std::endl;
+            std::cout << "Sent START_GAME message to user " << userId << " at client socket: " << clientSocket << " for room: " << name << std::endl;
         }
     }
 }
