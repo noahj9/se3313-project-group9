@@ -14,8 +14,8 @@ import javax.swing.Timer;
 
 public class Panel extends JPanel implements Multiplier.MultiplierListener {
     public CountdownPanel countdownPanel;
-    public Multiplier multiplier = new Multiplier();
-    public Player player = new Player();
+    public Multiplier multiplier;
+    public Player player;
     public Explosion explosion;
     public LeftPanel leftPanel;
     public RightPanel rightPanel;
@@ -26,7 +26,7 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
     public CashoutCenterPanel cashoutCenterPanel;
     public RoomsListCenterPanel roomListPanel;
     public JPanel mainPanel;
-    public JPanel gamePanel = new JPanel(new BorderLayout());
+    public JPanel gamePanel;
     public JLabel statusLabel;
     public boolean gameInitialized = false;
     public boolean countdownFunctionCalled = false;
@@ -369,7 +369,8 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
             Timer timer = new Timer(10000, e -> {
                 gamePanel.remove(explosion);
                 gamePanel.remove(multiplier);
-                countdownPanel.resetTime();
+                countdownPanel = new CountdownPanel();
+                // countdownPanel.resetTime();
                 gamePanel.add(countdownPanel, BorderLayout.NORTH);
                 add(gamePanel, BorderLayout.NORTH);
                 revalidate();
@@ -382,12 +383,15 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
     }
     
     public void startGame() {
+        player = new Player();
+        multiplier = new Multiplier();
+        gamePanel = new JPanel(new BorderLayout());
+
         multiplier.setIsStopped(false);
         System.out.println("in countdown function");
-        System.out.println("Multiplier value: " + multiplier.getMultiplier());
-        if (gameStarted){
+        if (gameStarted) {
             gamePanel.remove(countdownPanel);
-        }else{
+        } else {
             gameStarted = true;
         }
         // multiplier.addMultiplierListener(this);
@@ -396,6 +400,7 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
         add(gamePanel, BorderLayout.NORTH);
         revalidate();
         repaint();
+        System.out.println("Added game panel");
     }
 
     JLabel selectedRoomLabel = new JLabel("Select a room");
@@ -661,7 +666,7 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
                     //     startGame();
                     //     gameInitialized=true;
                     // }
-
+                    
                     startGame();
                 });
                 System.out.println("Game started.");
