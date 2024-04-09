@@ -3,6 +3,17 @@
 - server.cpp: method to connect with AWS
 - SpacemanGame.cpp: Actual game logic
 
+Debugging
+g++ -g -std=c++17 server.cpp Gameroom.cpp User.cpp Utils.cpp -o server
+gdb ./server
+run
+bt
+next      # Execute the next line of code
+step      # Step into function calls
+finish    # Continue executing until the current function returns
+
+
+
 Building the game:
 
 - g++ -std=c++17 server.cpp Gameroom.cpp User.cpp Utils.cpp -o server
@@ -21,12 +32,6 @@ g++ -std=c++17 -pthread main.cpp User.cpp Gameroom.cpp Utils.cpp -o SecondSpacem
 
 - ./SpacemanGame
 
-FOR JAMES & NOAH:
-- server:
-- g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror server.cpp Gameroom.cpp User.cpp Utils.cpp -o server.exe -lws2_32
-
-- testing client:
-- g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -g userConnect.cpp -o userConnect.exe -lws2_32
 ## Design and Implementation
 
 1. Base class for spaceman game

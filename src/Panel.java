@@ -100,7 +100,6 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
                     //     Socket socket = new Socket("127.0.0.1", 2003);
                     //     OutputStream outputStream = socket.getOutputStream();
 
-                    //     // TODO: This will have to be an exact room name based on what's selected
                     //     String request = "LEAVE_ROOM";
                     //     outputStream.write(request.getBytes());
                     //     socket.close();
@@ -461,7 +460,6 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
                         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                         OutputStream outputStream = socket.getOutputStream();
 
-                        // TODO: This will have to be an exact room name based on what's selected
                         String request = "CREATE_ROOM";
                         outputStream.write(request.getBytes());
                         socket.close();
@@ -675,7 +673,6 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
                 if (parts.length > 1) {
                     String balance = parts[1];
                     System.out.println("Balance updated: " + balance);
-                    //TODO (CATRIOOONA) Update GUI with new balance here
                 }
             }
         }
@@ -711,7 +708,7 @@ public class Panel extends JPanel implements Multiplier.MultiplierListener {
     }
     
 
-    public static void initializeUser() { //TODO: NOAH
+    public static void initializeUser() {
         // Logic for creating user --> join the server through a socket connection
         // Should receive a "userId" (string) from the server. Store this in a global variable
         try {

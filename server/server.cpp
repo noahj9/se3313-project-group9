@@ -40,7 +40,7 @@ std::string initializeUser(int clientSocket)
     return userId;
 }
 
-std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of active rooms with mutex protect
+std::string getActiveRooms()
 // then we need to parse this into string list
 // Room name: Room_1, Players: 2 : example
 {
@@ -56,7 +56,7 @@ std::string getActiveRooms() // TODO SCOTT: this needs to iterate thru list of a
 }
 
 void joinGameRoom(std::string roomName, std::string userId)
-{ // TODO James
+{
     // Joining an ALREADY created room (existing)
     // If the desired room is found, add the client to the room by adding their USER ID to the room's clients list
     // we should make sure the room exists
@@ -114,7 +114,7 @@ void bet(std::string roomName, std::string userId, std::string betAmount)
     std::cerr << "Desired room not found for bet function. Room name: " << roomName << "\n";
 }
 
-void leaveRoom(std::string roomName, std::string userId) // TODO James
+void leaveRoom(std::string roomName, std::string userId)
 {
     // Leaving an ALREADY created room (existing)
     // If the desired room is found, remove the client from the room by removing their USER ID from the room's clients list
@@ -126,7 +126,6 @@ void leaveRoom(std::string roomName, std::string userId) // TODO James
     {
         if (room.name == roomName)
         {
-            // TODO: Change this to be the USER ID
             room.removeClient(userId);
             return;
         }
@@ -191,7 +190,6 @@ void handleClient(std::string userId)
 
                 std::cout << "Joining room: " << roomName << " with user ID: " << userId << std::endl;
 
-                // TODO: Change to the user ID
                 joinGameRoom(roomName, userId); // Pass the client socket
             }
         }
@@ -229,7 +227,6 @@ void handleClient(std::string userId)
         }
         else if (request == "LEAVE_ROOM")
         {
-            // TODO: Implement leave room method
             // We would expect this to be something like the below:
 
             size_t pos = request.find(" ");
@@ -239,7 +236,6 @@ void handleClient(std::string userId)
             {
                 std::string roomName = request.substr(pos + 1, nextSpacePos - pos - 1);
                 std::string userId = request.substr(nextSpacePos + 1);
-                // TODO: Change to the user ID
                 leaveRoom(roomName, userId);
             }
         }

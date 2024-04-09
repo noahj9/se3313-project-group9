@@ -28,7 +28,6 @@ Gameroom::Gameroom() : gameInProgress(false), name("") {}
 Gameroom::Gameroom(const std::string &roomName) : gameInProgress(false), name(roomName) {}
 Gameroom::Gameroom(Gameroom &&other) : gameInProgress(false), name(other.name), clients(other.clients) {}
 
-// TODO: Change this to accept the client's BUTTON PRESS ("CASHOUT")
 // This function WAS to ensure a second thread was used to ensure the COMMAND LINE game could be played.
 // Likely do not need this function in the final implementation.
 void handleUserInput(std::atomic<bool> &stopRequested, std::function<void(std::string)> stopFunction)
@@ -49,7 +48,6 @@ void handleUserInput(std::atomic<bool> &stopRequested, std::function<void(std::s
     }
 }
 
-// TODO: Change to accept user ID
 void Gameroom::acceptClient(std::string userId)
 {
     std::lock_guard<std::mutex> lock(gameMutex); // Lock for thread safety
@@ -63,7 +61,6 @@ void Gameroom::acceptClient(std::string userId)
     }
 }
 
-// TODO: Change to accept user ID
 void Gameroom::removeClient(std::string userId)
 {
     std::lock_guard<std::mutex> lock(gameMutex); // Lock for thread safety
@@ -125,11 +122,20 @@ void Gameroom::startGame()
 
         for (const auto &userId : clients)
         {
-            int clientSocket = globalUsers[userId].socket;
+            // Debugging possible segmentation fault here, index out of bounds?
+            // TODO
+            auto it = globalUsers.find(userId);
+            if (it != globalUsers.end())
+            {
+                int clientSocket = it->second.socket;
 
-            // TODO: Chris, please accept this on the frontend **
-            send(clientSocket, "START_GAME", strlen("START_GAME"), 0);
-            std::cout << "Sent START_GAME message to user " << userId << " at client socket: " << clientSocket << " for room: " << name << std::endl;
+                send(clientSocket, "START_GAME", strlen("START_GAME"), 0);
+                std::cout << "Sent START_GAME message to user " << userId << " at client socket: " << clientSocket << " for room: " << name << std::endl;
+            }
+            else
+            {
+                std::cerr << "User " << userId << " not found in global users." << std::endl;
+            }
         }
     }
 }
@@ -168,7 +174,6 @@ void Gameroom::endGame()
     for (const auto &userId : clients)
     {
         int clientSocket = globalUsers[userId].socket;
-        // TODO: Chris, please accept this on the frontend **
         send(clientSocket, "END_GAME", strlen("END_GAME"), 0);
         send(clientSocket, ("BALANCE " + std::to_string(globalUsers[userId].balance)).c_str(),
              ("BALANCE " + std::to_string(globalUsers[userId].balance)).size(), 0);
