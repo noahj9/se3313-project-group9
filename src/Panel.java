@@ -700,9 +700,14 @@ public class Panel extends JPanel implements CountdownPanel.CountdownListener, M
                 byte[] buffer = new byte[1024];
                 int bytesRead;
 
-                while (running && (bytesRead = inputStream.read(buffer)) != -1) {
-                    String message = new String(buffer, 0, bytesRead);
-                    handleServerMessage(message);
+                while (running) {
+                    String message = reader.readLine(); // Read until newline delimiter
+                    if (message != null) {
+                        handleServerMessage(message);
+                    } else {
+                        // Handle end of stream or error
+                        break;
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
