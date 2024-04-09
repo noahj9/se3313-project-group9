@@ -15,26 +15,23 @@ public class CountdownPanel extends JPanel {
         countdownLabel.setHorizontalAlignment(JLabel.CENTER);
         countdownLabel.setFont(new Font("Arial", Font.BOLD, 24));
         add(countdownLabel, BorderLayout.CENTER);
-
-        time = 10;
-
+    }
+    public void resetTime(){
+        time = 8;
         Timer timer = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 countdownLabel.setText("Enter the Round. Closes in: " + time +"s");
                 time--;
 
-                // if (time < 0) {
-                //     ((Timer) e.getSource()).stop();
-                //     countdownLabel.setText("Round Closed");
-                //     // fireCountdownFinishedEvent();
-                // }
+                if (time < 0) {
+                    ((Timer) e.getSource()).stop();
+                    countdownLabel.setText("Round Closed");
+                    // fireCountdownFinishedEvent();
+                }
             }
         });
         timer.start();
-    }
-    public void resetTime(){
-        time = 10;
     }
     public int getTime() {
         return time;
