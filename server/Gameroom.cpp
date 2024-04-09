@@ -124,7 +124,6 @@ void Gameroom::startGame()
         for (const auto &userId : clients)
         {
             // Debugging possible segmentation fault here, index out of bounds?
-            // TODO
             auto it = globalUsers.find(userId);
             if (it != globalUsers.end())
             {
